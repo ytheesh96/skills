@@ -8,6 +8,7 @@
   "upstream": {
     "repository": "https://github.com/mattpocock/skills",
     "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+    "initial_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
     "license": "MIT",
     "attribution": "Matt Pocock"
   },
@@ -18,7 +19,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/ask-matt/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -39,7 +41,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/in-progress/claude-handoff/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -60,7 +63,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/code-review/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -81,7 +85,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/codebase-design/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -102,7 +107,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/diagnosing-bugs/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -123,7 +129,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/domain-modeling/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -143,7 +150,10 @@
       "distribution_path": "skills/foreground-owned-loop-orchestration/SKILL.md",
       "source": {
         "kind": "hermes-native",
-        "path": "Hermes Agent public-safe adaptation inventory"
+        "path": "provenance/sources/foreground-owned-loop-orchestration.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/foreground-owned-loop-orchestration.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -158,7 +168,8 @@
         "retired-api-scan",
         "durable-kanban-semantics",
         "manual-model-eval"
-      ]
+      ],
+      "distribution_sha256": "35498f44353c213e3e7dbc87475e03b2b3f8eb1002cf27363c1ff818425b3e1f"
     },
     {
       "slug": "git-guardrails-claude-code",
@@ -166,7 +177,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/misc/git-guardrails-claude-code/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -187,7 +199,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/productivity/grill-me/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -208,7 +221,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/grill-with-docs/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -229,7 +243,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/productivity/grilling/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -250,7 +265,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/productivity/handoff/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -271,7 +287,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/implement/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -292,7 +309,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/improve-codebase-architecture/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -312,7 +330,10 @@
       "distribution_path": "skills/kanban-orchestrator/SKILL.md",
       "source": {
         "kind": "hermes-native",
-        "path": "Hermes Agent public-safe adaptation inventory"
+        "path": "provenance/sources/kanban-orchestrator.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/kanban-orchestrator.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -327,14 +348,18 @@
         "retired-api-scan",
         "durable-kanban-semantics",
         "manual-model-eval"
-      ]
+      ],
+      "distribution_sha256": "3453fb0f4c5d626e9b69a555ea415767b1b9a2e63b40f26b807a87e40c71ef0e"
     },
     {
       "slug": "kanban-worker",
       "distribution_path": "skills/kanban-worker/SKILL.md",
       "source": {
         "kind": "hermes-native",
-        "path": "Hermes Agent public-safe adaptation inventory"
+        "path": "provenance/sources/kanban-worker.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/kanban-worker.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -349,7 +374,8 @@
         "retired-api-scan",
         "durable-kanban-semantics",
         "manual-model-eval"
-      ]
+      ],
+      "distribution_sha256": "9d9d1232551f09c9ff6bca2c6ef5c8bcc72d5a727ae36d63c4d514bf10249e4c"
     },
     {
       "slug": "loop-me",
@@ -357,7 +383,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/in-progress/loop-me/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -378,7 +405,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/misc/migrate-to-shoehorn/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -399,7 +427,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/prototype/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -420,7 +449,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/research/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -441,7 +471,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/resolving-merge-conflicts/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -462,7 +493,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/misc/scaffold-exercises/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -483,7 +515,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -504,7 +537,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/misc/setup-pre-commit/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -525,7 +559,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/in-progress/setup-ts-deep-modules/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -546,7 +581,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/tdd/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -567,12 +603,14 @@
       "source": {
         "kind": "upstream",
         "path": "skills/productivity/teach/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+        "overlay_path": "provenance/overlays/teach.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
-        "policy": "upstream-flat-copy",
-        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+        "policy": "hermes-support-path-adaptation",
+        "rationale": "Re-home the upstream workspace format documents under the fetchable references/ directory so direct URL installs remain complete."
       },
       "version": "1.0.0",
       "validation": [
@@ -580,7 +618,8 @@
         "tap-layout",
         "provenance-license",
         "retired-api-scan"
-      ]
+      ],
+      "distribution_sha256": "bb2d319ab8ae34679582c6cfa8b83aea01b722bcfdf6893e2b03de00670d4eb4"
     },
     {
       "slug": "to-questionnaire",
@@ -588,7 +627,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/productivity/to-questionnaire/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -609,7 +649,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/to-spec/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -630,7 +671,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/to-tickets/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -651,7 +693,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/triage/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -672,7 +715,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/productivity/wait-what/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -693,7 +737,9 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/wayfinder/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+        "overlay_path": "provenance/overlays/wayfinder.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -708,7 +754,8 @@
         "retired-api-scan",
         "durable-kanban-semantics",
         "manual-model-eval"
-      ]
+      ],
+      "distribution_sha256": "337f41667840d5edac330c889dbc38ee67d835417efbe02228a0df73bf24b557"
     },
     {
       "slug": "wizard",
@@ -716,12 +763,14 @@
       "source": {
         "kind": "upstream",
         "path": "skills/engineering/wizard/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+        "overlay_path": "provenance/overlays/wizard.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
-        "policy": "upstream-flat-copy",
-        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+        "policy": "hermes-support-path-adaptation",
+        "rationale": "Re-home the wizard template under the fetchable scripts/ directory so direct URL installs include the template used by the skill."
       },
       "version": "1.0.0",
       "validation": [
@@ -729,7 +778,8 @@
         "tap-layout",
         "provenance-license",
         "retired-api-scan"
-      ]
+      ],
+      "distribution_sha256": "fee277f4591a617a4a86ab8fce90d027771935e3e74736a2783027c4e7df715b"
     },
     {
       "slug": "writing-beats",
@@ -737,7 +787,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/in-progress/writing-beats/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -758,7 +809,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/productivity/writing-for-agents/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -779,7 +831,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/in-progress/writing-fragments/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -799,7 +852,10 @@
       "distribution_path": "skills/writing-plans/SKILL.md",
       "source": {
         "kind": "hermes-native",
-        "path": "Hermes Agent public-safe adaptation inventory"
+        "path": "provenance/sources/writing-plans.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/writing-plans.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
@@ -814,7 +870,8 @@
         "retired-api-scan",
         "durable-kanban-semantics",
         "manual-model-eval"
-      ]
+      ],
+      "distribution_sha256": "7260c156cb511935582c89d5b165b39c8a22bb636bcd2e966acb0669772fc012"
     },
     {
       "slug": "writing-shape",
@@ -822,7 +879,8 @@
       "source": {
         "kind": "upstream",
         "path": "skills/in-progress/writing-shape/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills"
+        "repository": "https://github.com/mattpocock/skills",
+        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {

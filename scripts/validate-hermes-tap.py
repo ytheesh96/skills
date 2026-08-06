@@ -1,51 +1,187 @@
 #!/usr/bin/env python3
-"""Deterministic checks for the Hermes flat skill tap."""
+"""Deterministic validation for the flat Hermes skill distribution."""
+
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote
 
-ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "hermes-skill-manifest.json"
+
+DEFAULT_ROOT = Path(__file__).resolve().parents[1]
+HEX_SHA = re.compile(r"^[0-9a-f]{40}$")
+HEX_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+SLUG = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
+SUPPORT_ROOTS = frozenset({"references", "templates", "scripts", "assets", "examples"})
+KNOWN_POLICIES = frozenset(
+    {"upstream-flat-copy", "hermes-kanban-adaptation", "hermes-support-path-adaptation"}
+)
+
+# This deliberately finds package-relative paths, not arbitrary words such as
+# "assets".  The direct Hermes bundle is rooted at skills/<slug>/, so every
+# match must resolve below that skill directory.
+LOCAL_REF = re.compile(
+    r"(?<![A-Za-z0-9_./-])"
+    r"((?:\./)?(?:references|templates|scripts|assets|examples)"
+    r"(?:/[^\s<>()\[\]`\"']+)+)"
+)
 RETIRED = re.compile(
     r"delegate_task\s*\(\s*mode\s*=\s*['\"](?:loop|durable)['\"]|"
     r"\b(?:loop_graph|loop_create|loop_status|loop_block)\s*\("
 )
-REQUIRED_ORCHESTRATION = (
-    "kanban_create", "kanban_list", "kanban_show", "kanban_block",
-    "kanban_unblock", "kanban_link", "board", "tenant",
+REQUIRED_SEMANTICS = {
+    "foreground-owned-loop-orchestration": (
+        "kanban_create", "kanban_list", "kanban_show", "kanban_block",
+        "kanban_unblock", "kanban_link", "board", "tenant",
+    ),
+    "kanban-orchestrator": (
+        "kanban_create", "kanban_list", "kanban_show", "kanban_block",
+        "kanban_unblock", "kanban_link", "board", "tenant",
+    ),
+    "kanban-worker": (
+        "kanban_show", "kanban_complete", "kanban_block", "board", "tenant",
+    ),
+    "wayfinder": (
+        "kanban_create", "kanban_list", "kanban_show", "kanban_block",
+        "kanban_unblock", "kanban_link", "board", "tenant",
+    ),
+    "writing-plans": (
+        "kanban_create", "kanban_list", "kanban_show", "kanban_block",
+        "kanban_unblock", "kanban_link", "board", "tenant",
+    ),
+}
+
+# These are portability boundaries, not a ban on generic words such as
+# "credential" or "career" that can be legitimate subject matter in a skill.
+# Identity tokens are compared by digest so the public validator does not
+# publish the maintainer's private name or address as readable source text.
+PRIVATE_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._%+@-]*")
+PRIVATE_TOKEN_DIGESTS = frozenset(
+    {
+        "2db533f41033268db04f6ff8151fb6f5862c6509d8f35783b0c14b090e8766a6",
+        "52d08aa1d7b71952948b1f6085b51230e2afbb37eb7d1a8f97c0365aab1e857f",
+        "f2de7baddf616fa5f40a1b8caf3dcc0a73d9cd91898213e286cb600f87d7372f",
+    }
+)
+PRIVATE_PATTERNS = (
+    ("private path", re.compile(r"(?:~\/\.hermes|/(?:Users|home)/[A-Za-z0-9._-]+)")),
+    (
+        "installation-specific profile",
+        re.compile(r"\b(?:research-worker|reviewer-qa|ops-steward|zilor-ppt)\b"),
+    ),
+    (
+        "free-floating provenance label",
+        re.compile(r"(?i)Hermes Agent public-safe adaptation inventory"),
+    ),
 )
 
 
-def frontmatter(text: str) -> dict[str, str]:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=DEFAULT_ROOT,
+        help="distribution checkout to validate (default: repository root)",
+    )
+    return parser.parse_args(argv)
+
+
+def load_manifest(root: Path) -> tuple[dict, list[str]]:
+    path = root / "hermes-skill-manifest.json"
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}, [f"missing manifest: {path.relative_to(root)}"]
+    except json.JSONDecodeError as exc:
+        return {}, [f"manifest is not valid JSON: {exc}"]
+    if not isinstance(manifest, dict):
+        return {}, ["manifest root must be an object"]
+    errors: list[str] = []
+    if manifest.get("schema_version") != 1:
+        errors.append("manifest schema_version must be 1")
+    if not isinstance(manifest.get("skills"), list) or not manifest["skills"]:
+        errors.append("manifest skills must be a non-empty list")
+    return manifest, errors
+
+
+def safe_relative_path(root: Path, raw: str) -> tuple[Path | None, str | None]:
+    """Resolve a repository-relative path without allowing traversal."""
+
+    cleaned = unquote(raw).strip().removeprefix("./").rstrip(".,;:")
+    if not cleaned:
+        return None, "empty path"
+    if "*" in cleaned:
+        return None, f"wildcard is not a fetchable package path: {raw}"
+    path = Path(cleaned)
+    if path.is_absolute() or ".." in path.parts:
+        return None, f"path escapes the package directory: {raw}"
+    resolved = (root / path).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError:
+        return None, f"path escapes the checkout: {raw}"
+    return resolved, None
+
+
+def referenced_support_paths(text: str) -> tuple[set[str], list[str]]:
+    """Return every package-relative support path mentioned by a skill."""
+
+    refs: set[str] = set()
+    errors: list[str] = []
+    for match in LOCAL_REF.finditer(text):
+        raw = match.group(1)
+        cleaned = unquote(raw).strip().removeprefix("./").rstrip(".,;:")
+        if "*" in cleaned:
+            errors.append(f"wildcard support reference is not fetchable: {raw}")
+            continue
+        refs.add(cleaned)
+    return refs, errors
+
+
+def check_frontmatter(path: Path, text: str, expected_name: str) -> list[str]:
+    errors: list[str] = []
     if not text.startswith("---\n"):
-        raise ValueError("missing YAML frontmatter opening marker")
+        return [f"{path}: missing YAML frontmatter"]
     end = text.find("\n---", 4)
     if end < 0:
-        raise ValueError("missing YAML frontmatter closing marker")
+        return [f"{path}: unterminated YAML frontmatter"]
     values: dict[str, str] = {}
     for line in text[4:end].splitlines():
-        if not line.strip() or ":" not in line:
+        if ":" not in line or line[:1].isspace():
             continue
         key, value = line.split(":", 1)
         values[key.strip()] = value.strip().strip('"\'')
-    if not values.get("name") or not values.get("description"):
-        raise ValueError("frontmatter requires name and description")
-    return values
+    if values.get("name") != expected_name:
+        errors.append(f"{path}: frontmatter name {values.get('name')!r} != {expected_name!r}")
+    if not values.get("description"):
+        errors.append(f"{path}: frontmatter description is empty")
+    return errors
 
 
 def fenced_blocks(text: str) -> list[str]:
     blocks: list[str] = []
     active = False
     current: list[str] = []
+    marker = ""
     for line in text.splitlines():
-        if line.startswith("```"):
-            if active:
+        candidate = line.strip()
+        if candidate.startswith("```") or candidate.startswith("~~~"):
+            current_marker = candidate[:3]
+            if active and current_marker == marker:
                 blocks.append("\n".join(current))
                 current = []
-            active = not active
+                active = False
+                marker = ""
+            elif not active:
+                active = True
+                marker = current_marker
+            else:
+                current.append(line)
         elif active:
             current.append(line)
     if active:
@@ -53,68 +189,302 @@ def fenced_blocks(text: str) -> list[str]:
     return blocks
 
 
-def main() -> int:
-    manifest = json.loads(MANIFEST.read_text())
+def check_support_paths(
+    root: Path,
+    distribution_file: Path,
+    text: str,
+    source_file: Path | None = None,
+    pure_copy: bool = False,
+) -> tuple[list[str], set[str]]:
+    refs, errors = referenced_support_paths(text)
+    skill_dir = distribution_file.parent
+    source_dir = source_file.parent if source_file is not None else None
+    for ref in sorted(refs):
+        first = ref.split("/", 1)[0]
+        if first not in SUPPORT_ROOTS:
+            errors.append(f"{distribution_file}: unsupported package reference {ref}")
+            continue
+        path, path_error = safe_relative_path(skill_dir, ref)
+        if path_error:
+            errors.append(f"{distribution_file}: {path_error}")
+            continue
+        if path is None or not path.is_file():
+            errors.append(f"{distribution_file}: missing support file {ref}")
+            continue
+        if pure_copy and source_dir is not None:
+            source_path, source_error = safe_relative_path(source_dir, ref)
+            if source_error or source_path is None or not source_path.is_file():
+                errors.append(
+                    f"{distribution_file}: mapped upstream support file is missing {ref}"
+                )
+            elif path.read_bytes() != source_path.read_bytes():
+                errors.append(
+                    f"{distribution_file}: support file drifted from mapped upstream source {ref}"
+                )
+    return errors, refs
+
+
+def check_public_portability(path: Path, text: str) -> list[str]:
     errors: list[str] = []
-    if manifest.get("schema_version") != 1:
-        errors.append("manifest schema_version must be 1")
-    base_sha = manifest.get("upstream", {}).get("base_sha")
-    if base_sha != "8b36d4fb2635b3c21998dcd8144439c9e5ba7302":
-        errors.append("manifest upstream base_sha is not the verified dispatch-time SHA")
+    for label, pattern in PRIVATE_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            errors.append(f"{path}: public-portability violation ({label}): {match.group(0)!r}")
+    for token in PRIVATE_TOKEN.findall(text):
+        normalized = token.rstrip(".,;:").lower()
+        digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        if digest in PRIVATE_TOKEN_DIGESTS:
+            errors.append(f"{path}: public-portability violation (personal identity token)")
+    return errors
+
+
+def check_source_path(root: Path, raw: str, label: str) -> tuple[Path | None, list[str]]:
+    if raw == "Hermes Agent public-safe adaptation inventory":
+        return None, [f"{label}: free-floating provenance label is not a committed path"]
+    path, path_error = safe_relative_path(root, raw)
+    if path_error:
+        return None, [f"{label}: {path_error}"]
+    if path is None or not path.is_file():
+        return None, [f"{label}: missing committed source/provenance path {raw}"]
+    return path, []
+
+
+def sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def check_provenance_record(
+    entry: dict,
+    source_file: Path,
+    overlay_file: Path | None,
+    source_base: str,
+    errors: list[str],
+) -> None:
+    source_kind = entry["source"].get("kind")
+    if source_kind == "hermes-native" and source_base not in source_file.read_text(encoding="utf-8"):
+        errors.append(
+            f"{entry['slug']}: Hermes-native source record does not contain its immutable base SHA"
+        )
+    if overlay_file is not None and source_base not in overlay_file.read_text(encoding="utf-8"):
+        errors.append(
+            f"{entry['slug']}: overlay record does not contain its immutable base SHA"
+        )
+
+
+def support_reference_count(root: Path) -> int:
+    manifest, _ = load_manifest(root.resolve())
+    total = 0
+    for entry in manifest.get("skills", []):
+        raw = entry.get("distribution_path")
+        if not isinstance(raw, str):
+            continue
+        path = root / raw
+        if path.is_file():
+            total += len(referenced_support_paths(path.read_text(encoding="utf-8"))[0])
+    return total
+
+
+def validate(root: Path) -> list[str]:
+    root = root.resolve()
+    manifest, errors = load_manifest(root)
+    if not manifest:
+        return errors
+
+    upstream = manifest.get("upstream", {})
+    if not isinstance(upstream, dict):
+        return errors + ["manifest upstream must be an object"]
+    current_base = upstream.get("base_sha")
+    initial_base = upstream.get("initial_base_sha")
+    repository = upstream.get("repository")
+    if not isinstance(current_base, str) or not HEX_SHA.fullmatch(current_base):
+        errors.append("upstream.base_sha must be a 40-character commit SHA")
+    if not isinstance(initial_base, str) or not HEX_SHA.fullmatch(initial_base):
+        errors.append("upstream.initial_base_sha must be an immutable 40-character commit SHA")
+    if not isinstance(repository, str) or not repository.startswith("https://"):
+        errors.append("upstream.repository must be an HTTPS repository URL")
+    if upstream.get("license") != "MIT":
+        errors.append("upstream.license must preserve MIT")
+    if upstream.get("attribution") != "Matt Pocock":
+        errors.append("upstream.attribution must preserve Matt Pocock")
 
     entries = manifest.get("skills", [])
-    if not entries:
-        errors.append("manifest has no skills")
-    seen: set[str] = set()
-    for entry in entries:
-        slug = entry.get("slug", "")
-        path = ROOT / entry.get("distribution_path", "")
-        if slug in seen:
-            errors.append(f"duplicate manifest slug: {slug}")
-        seen.add(slug)
-        if path != ROOT / "skills" / slug / "SKILL.md":
-            errors.append(f"{slug}: distribution_path must be skills/<slug>/SKILL.md")
-        if not path.is_file():
-            errors.append(f"{slug}: missing distributed SKILL.md")
+    seen_slugs: set[str] = set()
+    seen_distribution: set[str] = set()
+    manifest_distribution: set[Path] = set()
+    for index, entry in enumerate(entries):
+        label = f"skills[{index}]"
+        if not isinstance(entry, dict):
+            errors.append(f"{label}: entry must be an object")
             continue
-        source = entry.get("source", {})
-        if entry.get("adaptation", {}).get("policy") == "upstream-flat-copy":
-            source_path = ROOT / source.get("path", "")
-            if not source_path.is_file():
-                errors.append(f"{slug}: missing mapped upstream source {source.get('path')}")
-            elif path.read_bytes() != source_path.read_bytes():
-                errors.append(f"{slug}: flat copy differs from mapped upstream source")
+        slug = entry.get("slug")
+        if not isinstance(slug, str) or not SLUG.fullmatch(slug):
+            errors.append(f"{label}: slug must be a lowercase package identifier")
+            continue
+        if slug in seen_slugs:
+            errors.append(f"{slug}: duplicate manifest slug")
+        seen_slugs.add(slug)
+        distribution = entry.get("distribution_path")
+        expected_distribution = f"skills/{slug}/SKILL.md"
+        if distribution != expected_distribution:
+            errors.append(f"{slug}: distribution_path must be {expected_distribution}")
+        if not isinstance(distribution, str):
+            continue
+        if distribution in seen_distribution:
+            errors.append(f"{slug}: duplicate distribution_path")
+        seen_distribution.add(distribution)
+
+        distribution_file, path_errors = check_source_path(
+            root, distribution, f"{slug}.distribution_path"
+        )
+        errors.extend(path_errors)
+        if distribution_file is None:
+            continue
+        manifest_distribution.add(distribution_file.resolve())
+        text = distribution_file.read_text(encoding="utf-8")
+        errors.extend(check_frontmatter(distribution_file, text, slug))
+
+        source = entry.get("source")
+        if not isinstance(source, dict):
+            errors.append(f"{slug}: source must be an object with committed provenance")
+            continue
+        source_path_raw = source.get("path")
+        if not isinstance(source_path_raw, str):
+            errors.append(f"{slug}: source.path is required")
+            source_file = None
+        else:
+            source_file, source_errors = check_source_path(
+                root, source_path_raw, f"{slug}.source.path"
+            )
+            errors.extend(source_errors)
+        source_base = source.get("base_sha")
+        if not isinstance(source_base, str) or not HEX_SHA.fullmatch(source_base):
+            errors.append(f"{slug}: source.base_sha must be an immutable 40-character SHA")
+            source_base = ""
+        source_kind = source.get("kind")
+        if source_kind not in {"upstream", "hermes-native"}:
+            errors.append(f"{slug}: source.kind must be upstream or hermes-native")
+        source_repo = source.get("repository")
+        if not isinstance(source_repo, str) or not source_repo.startswith("https://"):
+            errors.append(f"{slug}: source.repository must be an HTTPS URL")
+        if source_kind == "upstream" and source_repo != repository:
+            errors.append(f"{slug}: upstream source.repository must match upstream.repository")
+
+        upstream_base = entry.get("upstream_base_sha")
+        if not isinstance(upstream_base, str) or not HEX_SHA.fullmatch(upstream_base):
+            errors.append(f"{slug}: upstream_base_sha must be a 40-character SHA")
+        elif isinstance(current_base, str) and upstream_base != current_base:
+            errors.append(
+                f"{slug}: upstream_base_sha must track manifest upstream.base_sha "
+                f"({upstream_base!r} != {current_base!r})"
+            )
+
+        adaptation = entry.get("adaptation")
+        if not isinstance(adaptation, dict) or not isinstance(adaptation.get("policy"), str):
+            errors.append(f"{slug}: adaptation.policy is required")
+            policy = ""
+        else:
+            policy = adaptation["policy"]
+            if policy not in KNOWN_POLICIES:
+                errors.append(f"{slug}: unknown adaptation.policy {policy!r}")
+        overlay_file: Path | None = None
+        if policy == "upstream-flat-copy":
+            if source_kind != "upstream":
+                errors.append(f"{slug}: pure-copy policy requires an upstream source")
+            if source_file is not None:
+                support_errors, _ = check_support_paths(
+                    root, distribution_file, text, source_file, pure_copy=True
+                )
+                errors.extend(support_errors)
+                if source_file.read_bytes() != distribution_file.read_bytes():
+                    errors.append(f"{slug}: pure-copy distribution drifted from {source_path_raw}")
+        else:
+            overlay_raw = source.get("overlay_path")
+            if not isinstance(overlay_raw, str):
+                errors.append(f"{slug}: adapted source requires source.overlay_path")
+            else:
+                overlay_file, overlay_errors = check_source_path(
+                    root, overlay_raw, f"{slug}.source.overlay_path"
+                )
+                errors.extend(overlay_errors)
+            support_errors, _ = check_support_paths(root, distribution_file, text)
+            errors.extend(support_errors)
+            digest = entry.get("distribution_sha256")
+            if not isinstance(digest, str) or not HEX_SHA256.fullmatch(digest):
+                errors.append(f"{slug}: adapted source requires distribution_sha256")
+            elif digest != sha256_file(distribution_file):
+                errors.append(f"{slug}: adapted distribution_sha256 does not match the file")
+
+        if source_file is not None and source_base:
+            check_provenance_record(entry, source_file, overlay_file, source_base, errors)
+        for provenance_file in (
+            source_file if source_kind == "hermes-native" else None,
+            overlay_file,
+        ):
+            if provenance_file is not None:
+                errors.extend(
+                    check_public_portability(
+                        provenance_file,
+                        provenance_file.read_text(encoding="utf-8", errors="replace"),
+                    )
+                )
+
+        for package_file in distribution_file.parent.rglob("*"):
+            if package_file.is_file():
+                errors.extend(
+                    check_public_portability(
+                        package_file,
+                        package_file.read_text(encoding="utf-8", errors="replace"),
+                    )
+                )
         try:
-            metadata = frontmatter(path.read_text())
-            if metadata["name"] != slug:
-                errors.append(f"{slug}: frontmatter name is {metadata['name']!r}")
-            blocks = fenced_blocks(path.read_text())
-        except (OSError, ValueError) as exc:
-            errors.append(f"{slug}: {exc}")
-            continue
+            blocks = fenced_blocks(text)
+        except ValueError as exc:
+            errors.append(f"{distribution_file}: {exc}")
+            blocks = []
         for block in blocks:
             if RETIRED.search(block):
-                errors.append(f"{slug}: retired durable API in executable code block")
-        if entry.get("adaptation", {}).get("policy") == "hermes-kanban-adaptation":
-            missing = [token for token in REQUIRED_ORCHESTRATION if token not in path.read_text()]
-            if missing:
-                errors.append(f"{slug}: missing current durable semantics: {', '.join(missing)}")
+                errors.append(f"{distribution_file}: retired durable API in executable code block")
+
+        required = REQUIRED_SEMANTICS.get(slug, ())
+        missing = [token for token in required if token not in text]
+        if missing:
+            errors.append(f"{slug}: missing current durable semantics: {', '.join(missing)}")
+
         for key in ("source", "upstream_base_sha", "adaptation", "version", "validation"):
             if key not in entry:
                 errors.append(f"{slug}: manifest missing {key}")
 
-    fixture_dir = ROOT / "evals" / "fixtures"
-    for fixture in ("kanban-enabled.json", "kanban-disabled.json"):
-        if not (fixture_dir / fixture).is_file():
-            errors.append(f"missing eval fixture {fixture}")
-    if not (ROOT / "LICENSE").is_file():
+    direct_distribution = {
+        path.resolve()
+        for path in (root / "skills").glob("*/SKILL.md")
+        if path.is_file()
+    }
+    missing_manifest = sorted(str(path.relative_to(root)) for path in direct_distribution - manifest_distribution)
+    unbundled = sorted(str(path.relative_to(root)) for path in manifest_distribution - direct_distribution)
+    if missing_manifest:
+        errors.append(f"unlisted direct distributions: {', '.join(missing_manifest)}")
+    if unbundled:
+        errors.append(f"manifest distributions are not direct skills: {', '.join(unbundled)}")
+    if not (root / "LICENSE").is_file():
         errors.append("upstream MIT LICENSE is missing")
 
+    return errors
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    root = args.root.resolve()
+    errors = validate(root)
     if errors:
-        print("FAIL")
-        print("\n".join(f"- {error}" for error in errors))
+        print("FAIL: Hermes skill distribution validation")
+        for error in errors:
+            print(f"- {error}")
         return 1
-    print(f"PASS: {len(entries)} distributed skills validated")
+    print(
+        "PASS: Hermes skill distribution validation "
+        f"({len(json.loads((root / 'hermes-skill-manifest.json').read_text())['skills'])} skills; "
+        f"{support_reference_count(root)} support references checked; 0 missing support paths)"
+    )
     return 0
 
 

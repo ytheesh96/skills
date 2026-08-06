@@ -11,15 +11,46 @@ This fork is a public Hermes Agent skill tap built from [Matt Pocock's `skills`]
 
 ## Install through Hermes Agent
 
+Hermes taps index the repository's default branch. After this flat layout is
+published there, the direct-child paths under `skills/<slug>/` are searchable.
+The current Hermes installer accepts a full GitHub identifier in the form
+`owner/repo/path/to/skill-directory` or a direct `SKILL.md` URL; `<skill-slug>`
+by itself is a search term, not an installer identifier. GitHub identifiers
+resolve the repository's default branch, so they cannot install an unmerged
+pull-request revision.
+
 ```bash
-hermes skills tap add ytheesh96/skills
-hermes skills search
-hermes skills install <skill-slug>
+tmp_home="$(mktemp -d "${TMPDIR:-/tmp}/hermes-skill-tap.XXXXXX")"
+tmp_home="$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$tmp_home")"
+export HERMES_HOME="$tmp_home"
+trap 'rm -rf "$tmp_home"' EXIT
+export HERMES_TAP_REPOSITORY=ytheesh96/skills
+hermes skills tap add "$HERMES_TAP_REPOSITORY"
+hermes skills search writing-shape --source github --json
+
+# Tested fallback for a published immutable commit. Set TAP_COMMIT to the
+# published commit you intend to install; an unmerged pull-request commit is
+# not visible through a tap's default-branch index. This is the immutable
+# published revision used by the smoke run; replace it after a later release.
+export TAP_COMMIT=2ea761d869638590f7ec4b93abca2168a059300c
+hermes skills install \
+  "https://raw.githubusercontent.com/ytheesh96/skills/${TAP_COMMIT}/skills/writing-shape/SKILL.md" \
+  --yes
 hermes skills check
 hermes skills update
 ```
 
-The first command registers this fork as a tap. Search and install only the skills you need; `check` validates the installed skill metadata, and `update` refreshes installed skills from the tap.
+The first command registers this fork as a tap. The exact search query uses the
+GitHub tap source; while this candidate is only a pull request it returns `[]` because
+the tap reads the default branch. The raw URL fallback is the tested pre-merge
+candidate lane: the smoke installed `writing-shape`, `check` reported it
+up-to-date, and `update` reported no updates. After the flat layout is on the
+default branch, use the repository identifier for the published path (for
+example `ytheesh96/skills/skills/writing-shape`); before then, the resolver may
+return the old default-branch indexed skill instead of the candidate. The
+smoke canonicalizes the disposable `HERMES_HOME` path because the current CLI
+compares canonical install roots; without that step, macOS symlinked temporary
+directories can be rejected during installation.
 
 ## Upstream synchronization
 
@@ -38,9 +69,19 @@ Every pull request runs deterministic tap-layout, frontmatter, manifest, provena
 
 ```bash
 python3 scripts/validate-hermes-tap.py
+python3 scripts/test-hermes-tap-regressions.py
+python3 scripts/test-hermes-tap-workflows.py
 ```
 
-The validation suite rejects executable references to removed durable APIs such as `delegate_task(mode="loop")`, `delegate_task(mode="durable")`, `loop_graph(...)`, `loop_create(...)`, `loop_status(...)`, and `loop_block(...)`. It also checks the current Kanban semantics in adapted orchestration skills.
+The validation suite checks the 39 direct-child bundles, every referenced
+support file, pure-copy byte parity, adapted-content hashes, committed
+provenance, public portability, and current Kanban semantics. It rejects
+executable references to removed durable APIs such as
+`delegate_task(mode="loop")`, `delegate_task(mode="durable")`,
+`loop_graph(...)`, `loop_create(...)`, `loop_status(...)`, and
+`loop_block(...)`. The regression oracle advances the upstream cursor in an
+isolated checkout and proves that adapted drift fails closed before a sync can
+write anything.
 
 ## Attribution and license
 

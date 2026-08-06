@@ -36,9 +36,9 @@ not choose for the user or create follow-up work.
   durable `mode="loop"` or `mode="durable"` contract.
 - Durable maps use `kanban_create`, `kanban_link`, `kanban_list`, `kanban_show`,
   `kanban_comment`, `kanban_block`, `kanban_unblock`, and `kanban_complete`.
-- Use one explicit board for the whole map. In this installation, default to
-  `board="dir"` unless the user names another board. Pass the board on every
-  Kanban call; never rely on the current-board symlink.
+- Use one explicit board for the whole map. Resolve the board from the target
+  environment or user request; never assume a local board name. Pass it on
+  every Kanban call.
 - Give the map a stable `tenant` slug and reuse it on every task. The tenant is
   the map namespace; dependency edges define execution order.
 - A foreground `kanban_create` result must report `subscribed: true` before you
@@ -135,9 +135,9 @@ Use this mode when the user invokes `/wayfinder` with a loose idea.
    session and no fog remains, do not create a durable map; explain that the map
    is unnecessary and handle the bounded request directly when authorized.
 3. **Fix routing before creation.** Resolve the explicit board, one stable tenant
-   slug, and real on-disk assignee profiles. This installation's proven planning
-   lanes include `research-worker` for research and `reviewer-qa` for review;
-   re-discover profiles before assuming those names elsewhere.
+   slug, and real configured assignee profiles. Choose a profile for each lane
+   only after discovering that it exists; never assume names from another
+   installation.
 4. **Create the first sharp generation.** Call `kanban_create` once per task.
    Independent calls may be issued in parallel. Create parents first, capture
    their returned task IDs, then create each dependent with those IDs in
@@ -157,35 +157,35 @@ Current-tool example (one call per task):
 ```python
 research = kanban_create(
     title="Establish the current system boundary",
-    assignee="research-worker",
+    assignee="<verified-profile>",
     body=(
         "Type: Research. Question: what is the current supported boundary? "
         "Return sourced constraints and unresolved uncertainty; do not implement."
     ),
-    board="dir",
+    board="<explicit-board>",
     tenant="wayfinder-<stable-slug>",
     workspace_kind="scratch",
 )
 
 choice = kanban_create(
     title="Choose the supported boundary",
-    assignee="reviewer-qa",
+    assignee="<verified-profile>",
     body=(
         "Type: Decision. Read the parent handoff, compare viable options and "
         "consequences, and block with one exact question if user preference remains."
     ),
     parents=[research["task_id"]],
-    board="dir",
+    board="<explicit-board>",
     tenant="wayfinder-<stable-slug>",
     workspace_kind="scratch",
 )
 
 closeout = kanban_create(
     title="Accept the Wayfinder planning handoff",
-    assignee="reviewer-qa",
+    assignee="<verified-profile>",
     body="<Destination / Notes / Decisions / Not yet specified / Out of scope>",
     parents=[choice["task_id"]],
-    board="dir",
+    board="<explicit-board>",
     tenant="wayfinder-<stable-slug>",
     initial_status="blocked",
     workspace_kind="scratch",

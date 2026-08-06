@@ -15,9 +15,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate flat tap, manifest, provenance, and durable semantics
         run: python3 scripts/validate-hermes-tap.py
+      - name: Compile validation and regression scripts
+        run: python3 -m compileall -q scripts
+      - name: Run deterministic upstream-advance and drift regressions
+        run: python3 scripts/test-hermes-tap-regressions.py
+      - name: Parse and exercise workflow safety invariants
+        run: python3 scripts/test-hermes-tap-workflows.py
       - name: Check repository files for secrets and private paths
         run: |
-          ! git grep -nE '/Users/|/home/[^/]+/|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|gh[pousr]_[A-Za-z0-9_]{20,}' -- ':!package-lock.json' ':!.github/workflows/validate-hermes-tap.yml'
+          ! git grep -nE '/Users/|/home/[^/]+/|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|gh[pousr]_[A-Za-z0-9_]{20,}' -- ':!package-lock.json' ':!scripts/validate-hermes-tap.py' ':!.github/workflows/validate-hermes-tap.yml'
       - name: Check whitespace
         run: git diff --check
       - name: Validate JSON documents

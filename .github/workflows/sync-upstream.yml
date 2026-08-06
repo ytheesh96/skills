@@ -50,6 +50,7 @@ jobs:
           fi
           python3 scripts/sync-upstream-flat.py
           python3 scripts/validate-hermes-tap.py
+          git diff --check
           git commit -m "chore: sync Matt Pocock skills at $upstream"
           git push --force-with-lease origin "HEAD:refs/heads/upstream-mirror/$upstream"
           echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -58,12 +59,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: upstream-mirror/${{ steps.sync.outputs.upstream_sha }}
+          UPSTREAM_SHA: ${{ steps.sync.outputs.upstream_sha }}
         run: |
           set -euo pipefail
           existing="$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')"
-          body="This PR advances the preserved nested upstream tree to \\`${{ steps.sync.outputs.upstream_sha }}\\`.\n\nThe manifest and validation workflow identify mapped skill drift. Hermes flat adaptations are not overwritten; conflicts fail closed for maintainer review. This PR does not auto-merge behavior changes."
+          body="$(printf 'This PR advances the preserved nested upstream tree to %s.\n\nThe manifest and validation workflow identify mapped skill drift. Hermes flat adaptations are not overwritten; conflicts fail closed for maintainer review. This PR does not auto-merge behavior changes.\n' "$UPSTREAM_SHA")"
           if [ -n "$existing" ]; then
-            gh pr edit "$existing" --title "chore: sync Matt Pocock upstream ${{ steps.sync.outputs.upstream_sha }}" --body "$body"
+            gh pr edit "$existing" --title "chore: sync Matt Pocock upstream $UPSTREAM_SHA" --body "$body"
           else
-            gh pr create --base main --head "$BRANCH" --title "chore: sync Matt Pocock upstream ${{ steps.sync.outputs.upstream_sha }}" --body "$body"
+            gh pr create --base main --head "$BRANCH" --title "chore: sync Matt Pocock upstream $UPSTREAM_SHA" --body "$body"
           fi

@@ -43,8 +43,8 @@ one-call status lookup with delegated work.
   `kanban_comment`.
 - Workers complete or block with `kanban_complete` and `kanban_block`.
   Foreground resumes a resolved block with `kanban_unblock`.
-- Use one explicit board and tenant for the whole graph. In this installation,
-  default to `board="dir"` unless the user names another board.
+- Use one explicit board and tenant for the whole graph. Resolve the board from
+  the target environment or user request; never assume a local board name.
 - Pass the board on every call. A successful operation on the wrong current
   board is still a routing failure.
 - Verify `subscribed: true` on foreground-created tasks before promising that
@@ -63,7 +63,7 @@ lane = kanban_create(
         "Acceptance: <observable evidence>. "
         "Return evidence only; foreground owns acceptance and follow-up."
     ),
-    board="dir",
+    board="<explicit-board>",
     tenant="<stable-workflow-slug>",
     workspace_kind="scratch",
     idempotency_key="<stable-purpose-key>",
@@ -76,13 +76,13 @@ a later link.
 
 ## Quick reference
 
-- `kanban_list(board="dir", tenant="<slug>", limit=200)`
-- `kanban_show(board="dir", task_id="<task-id>")`
-- `kanban_create(..., board="dir", tenant="<slug>", parents=[...])`
-- `kanban_link(board="dir", parent_id="<prerequisite>", child_id="<dependent>")`
-- `kanban_comment(board="dir", task_id="<task-id>", body="<evidence note>")`
-- `kanban_unblock(board="dir", task_id="<task-id>")`
-- `kanban_complete(board="dir", task_id="<closeout-id>", summary="<handoff>")`
+- `kanban_list(board="<explicit-board>", tenant="<slug>", limit=200)`
+- `kanban_show(board="<explicit-board>", task_id="<task-id>")`
+- `kanban_create(..., board="<explicit-board>", tenant="<slug>", parents=[...])`
+- `kanban_link(board="<explicit-board>", parent_id="<prerequisite>", child_id="<dependent>")`
+- `kanban_comment(board="<explicit-board>", task_id="<task-id>", body="<evidence note>")`
+- `kanban_unblock(board="<explicit-board>", task_id="<task-id>")`
+- `kanban_complete(board="<explicit-board>", task_id="<closeout-id>", summary="<handoff>")`
 
 ## Procedure
 
