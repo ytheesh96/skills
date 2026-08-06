@@ -28,11 +28,11 @@ export HERMES_TAP_REPOSITORY=ytheesh96/skills
 hermes skills tap add "$HERMES_TAP_REPOSITORY"
 hermes skills search writing-shape --source github --json
 
-# Tested fallback for a published immutable commit. Set TAP_COMMIT to the
-# published commit you intend to install; an unmerged pull-request commit is
-# not visible through a tap's default-branch index. This is the immutable
-# published revision used by the smoke run; replace it after a later release.
-export TAP_COMMIT=2ea761d869638590f7ec4b93abca2168a059300c
+# Tested fallback for a published immutable commit. Set TAP_COMMIT to a
+# published commit that contains this flat layout; an unmerged pull-request
+# commit is not visible through a tap's default-branch index and cannot be
+# fetched from raw.githubusercontent.com until it is published.
+: "${TAP_COMMIT:?Set TAP_COMMIT to a published commit containing this tap layout}"
 hermes skills install \
   "https://raw.githubusercontent.com/ytheesh96/skills/${TAP_COMMIT}/skills/writing-shape/SKILL.md" \
   --yes
@@ -41,16 +41,18 @@ hermes skills update
 ```
 
 The first command registers this fork as a tap. The exact search query uses the
-GitHub tap source; while this candidate is only a pull request it returns `[]` because
-the tap reads the default branch. The raw URL fallback is the tested pre-merge
-candidate lane: the smoke installed `writing-shape`, `check` reported it
-up-to-date, and `update` reported no updates. After the flat layout is on the
-default branch, use the repository identifier for the published path (for
-example `ytheesh96/skills/skills/writing-shape`); before then, the resolver may
-return the old default-branch indexed skill instead of the candidate. The
-smoke canonicalizes the disposable `HERMES_HOME` path because the current CLI
-compares canonical install roots; without that step, macOS symlinked temporary
-directories can be rejected during installation.
+GitHub tap source; while this candidate is only a pull request it returns `[]`
+because the tap reads the default branch. The raw URL fallback is tested only
+for a published immutable revision; the smoke installed `writing-shape`,
+`check` reported it up-to-date, and `update` reported no updates. It does not
+prove installation of this unmerged local candidate. Until this candidate is
+published, no supported installer source can fetch its exact commit. After the
+flat layout is on the default branch, use the repository identifier for the
+published path (for example `ytheesh96/skills/skills/writing-shape`); before
+then, the resolver may return the old default-branch indexed skill instead of
+the candidate. The smoke canonicalizes the disposable `HERMES_HOME` path
+because the current CLI compares canonical install roots; without that step,
+macOS symlinked temporary directories can be rejected during installation.
 
 ## Upstream synchronization
 
