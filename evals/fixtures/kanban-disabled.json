@@ -1,0 +1,8 @@
+{
+  "name": "durable-kanban-disabled-baseline",
+  "mode": "skill-disabled",
+  "prompt": "Plan a two-step durable task with a human decision between steps.",
+  "required_behaviors": [],
+  "forbidden_behaviors": [],
+  "expected": "Without the Hermes adaptation, the fixture is a baseline only; it must not be treated as proof of durable semantics."
+}

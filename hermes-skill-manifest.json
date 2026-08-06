@@ -1,0 +1,849 @@
+{
+  "schema_version": 1,
+  "distribution": {
+    "name": "hermes-agent-skills",
+    "tap_layout": "skills/<slug>/SKILL.md",
+    "upstream_nested_tree_preserved": true
+  },
+  "upstream": {
+    "repository": "https://github.com/mattpocock/skills",
+    "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+    "license": "MIT",
+    "attribution": "Matt Pocock"
+  },
+  "skills": [
+    {
+      "slug": "ask-matt",
+      "distribution_path": "skills/ask-matt/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/ask-matt/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "claude-handoff",
+      "distribution_path": "skills/claude-handoff/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/in-progress/claude-handoff/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "code-review",
+      "distribution_path": "skills/code-review/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/code-review/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "codebase-design",
+      "distribution_path": "skills/codebase-design/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/codebase-design/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "diagnosing-bugs",
+      "distribution_path": "skills/diagnosing-bugs/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "domain-modeling",
+      "distribution_path": "skills/domain-modeling/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/domain-modeling/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "foreground-owned-loop-orchestration",
+      "distribution_path": "skills/foreground-owned-loop-orchestration/SKILL.md",
+      "source": {
+        "kind": "hermes-native",
+        "path": "Hermes Agent public-safe adaptation inventory"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Hermes-native foreground ownership guard for durable planning, decisions, review, and closure."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan",
+        "durable-kanban-semantics",
+        "manual-model-eval"
+      ]
+    },
+    {
+      "slug": "git-guardrails-claude-code",
+      "distribution_path": "skills/git-guardrails-claude-code/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/misc/git-guardrails-claude-code/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "grill-me",
+      "distribution_path": "skills/grill-me/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/productivity/grill-me/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "grill-with-docs",
+      "distribution_path": "skills/grill-with-docs/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/grill-with-docs/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "grilling",
+      "distribution_path": "skills/grilling/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/productivity/grilling/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "handoff",
+      "distribution_path": "skills/handoff/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/productivity/handoff/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "implement",
+      "distribution_path": "skills/implement/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/implement/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "improve-codebase-architecture",
+      "distribution_path": "skills/improve-codebase-architecture/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "kanban-orchestrator",
+      "distribution_path": "skills/kanban-orchestrator/SKILL.md",
+      "source": {
+        "kind": "hermes-native",
+        "path": "Hermes Agent public-safe adaptation inventory"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Hermes-native orchestration guidance for explicit board and tenant scoped Kanban fan-out."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan",
+        "durable-kanban-semantics",
+        "manual-model-eval"
+      ]
+    },
+    {
+      "slug": "kanban-worker",
+      "distribution_path": "skills/kanban-worker/SKILL.md",
+      "source": {
+        "kind": "hermes-native",
+        "path": "Hermes Agent public-safe adaptation inventory"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Hermes-native worker lifecycle guidance that keeps graph mutation, follow-ups, acceptance, and closure in the foreground."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan",
+        "durable-kanban-semantics",
+        "manual-model-eval"
+      ]
+    },
+    {
+      "slug": "loop-me",
+      "distribution_path": "skills/loop-me/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/in-progress/loop-me/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "migrate-to-shoehorn",
+      "distribution_path": "skills/migrate-to-shoehorn/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/misc/migrate-to-shoehorn/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "prototype",
+      "distribution_path": "skills/prototype/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/prototype/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "research",
+      "distribution_path": "skills/research/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/research/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "resolving-merge-conflicts",
+      "distribution_path": "skills/resolving-merge-conflicts/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/resolving-merge-conflicts/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "scaffold-exercises",
+      "distribution_path": "skills/scaffold-exercises/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/misc/scaffold-exercises/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "setup-matt-pocock-skills",
+      "distribution_path": "skills/setup-matt-pocock-skills/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "setup-pre-commit",
+      "distribution_path": "skills/setup-pre-commit/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/misc/setup-pre-commit/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "setup-ts-deep-modules",
+      "distribution_path": "skills/setup-ts-deep-modules/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/in-progress/setup-ts-deep-modules/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "tdd",
+      "distribution_path": "skills/tdd/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/tdd/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "teach",
+      "distribution_path": "skills/teach/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/productivity/teach/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "to-questionnaire",
+      "distribution_path": "skills/to-questionnaire/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/productivity/to-questionnaire/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "to-spec",
+      "distribution_path": "skills/to-spec/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/to-spec/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "to-tickets",
+      "distribution_path": "skills/to-tickets/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/to-tickets/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "triage",
+      "distribution_path": "skills/triage/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/triage/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "wait-what",
+      "distribution_path": "skills/wait-what/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/productivity/wait-what/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "wayfinder",
+      "distribution_path": "skills/wayfinder/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/wayfinder/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Hermes Agent adaptation of the upstream Wayfinder planning skill; current durable Kanban semantics and foreground ownership are explicit."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan",
+        "durable-kanban-semantics",
+        "manual-model-eval"
+      ]
+    },
+    {
+      "slug": "wizard",
+      "distribution_path": "skills/wizard/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/engineering/wizard/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "writing-beats",
+      "distribution_path": "skills/writing-beats/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/in-progress/writing-beats/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "writing-for-agents",
+      "distribution_path": "skills/writing-for-agents/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/productivity/writing-for-agents/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "writing-fragments",
+      "distribution_path": "skills/writing-fragments/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/in-progress/writing-fragments/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    },
+    {
+      "slug": "writing-plans",
+      "distribution_path": "skills/writing-plans/SKILL.md",
+      "source": {
+        "kind": "hermes-native",
+        "path": "Hermes Agent public-safe adaptation inventory"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Hermes-native implementation planning guidance with current Kanban handoff semantics."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan",
+        "durable-kanban-semantics",
+        "manual-model-eval"
+      ]
+    },
+    {
+      "slug": "writing-shape",
+      "distribution_path": "skills/writing-shape/SKILL.md",
+      "source": {
+        "kind": "upstream",
+        "path": "skills/in-progress/writing-shape/SKILL.md",
+        "repository": "https://github.com/mattpocock/skills"
+      },
+      "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
+      "adaptation": {
+        "policy": "upstream-flat-copy",
+        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+      },
+      "version": "1.0.0",
+      "validation": [
+        "frontmatter",
+        "tap-layout",
+        "provenance-license",
+        "retired-api-scan"
+      ]
+    }
+  ],
+  "model_evaluation": {
+    "credential_free_ci": true,
+    "manual_command": "Run the local model evaluation harness with credentials supplied by the operator; public Actions must not receive model credentials.",
+    "fixtures": [
+      "evals/fixtures/kanban-enabled.json",
+      "evals/fixtures/kanban-disabled.json"
+    ]
+  }
+}
