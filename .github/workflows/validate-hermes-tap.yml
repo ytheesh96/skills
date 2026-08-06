@@ -17,7 +17,7 @@ jobs:
         run: python3 scripts/validate-hermes-tap.py
       - name: Check repository files for secrets and private paths
         run: |
-          ! git grep -nE '/Users/|/home/[^/]+/|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|gh[pousr]_[A-Za-z0-9_]{20,}' -- ':!package-lock.json'
+          ! git grep -nE '/Users/|/home/[^/]+/|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|gh[pousr]_[A-Za-z0-9_]{20,}' -- ':!package-lock.json' ':!.github/workflows/validate-hermes-tap.yml'
       - name: Check whitespace
         run: git diff --check
       - name: Validate JSON documents
