@@ -234,6 +234,39 @@ def main() -> int:
         if (sync_checkout / "skills/wayfinder/SKILL.md").read_bytes() != before_distribution:
             raise AssertionError("synchronizer overwrote an adapted distribution before review")
 
+    # The validator must fail closed when a committed script hard-codes an
+    # absolute ~/.hermes path instead of resolving it from HERMES_HOME or
+    # Path.home(). A temporary fixture under scripts/ exercises the gate; the
+    # real tree then validates again once the fixture is removed, proving the
+    # check is precise and does not false-positive on the shipped scripts.
+    # The defective literal is assembled by concatenation so THIS test source
+    # does not itself contain a hard-coded absolute .hermes path (that would
+    # trip the very gate under test); only the generated fixture does.
+    bad_path = "/Users/yt/.her" + "mes/state/foreground-notify-target.json"
+    fixture = ROOT / "scripts" / "_regression_bad_fixture.py"
+    fixture.write_text(f"HERMES_HOME = {bad_path!r}\n", encoding="utf-8")
+    try:
+        injected_errors = validator.validate(ROOT)
+        if not any("hard-coded absolute .hermes path" in error for error in injected_errors):
+            raise AssertionError(
+                "validator did not flag a hard-coded absolute .hermes path:\\n- "
+                + "\n- ".join(injected_errors)
+            )
+        if not any(str(fixture.relative_to(ROOT)) in error for error in injected_errors):
+            raise AssertionError(
+                "hard-coded-path error did not name the offending fixture:\\n- "
+                + "\n- ".join(injected_errors)
+            )
+    finally:
+        fixture.unlink()
+
+    clean_errors = validator.validate(ROOT)
+    if clean_errors:
+        raise AssertionError(
+            "tree must validate again after the bad fixture is removed:\\n- "
+            + "\n- ".join(clean_errors)
+        )
+
     print("PASS: Hermes tap regression oracle")
     print("- current manifest/provenance validates with 0 missing support paths")
     print("- advanced upstream cursor validates without a historical SHA allowlist")

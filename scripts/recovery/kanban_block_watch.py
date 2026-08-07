@@ -195,14 +195,24 @@ def process_board(slug, db_path, is_baseline):
         woke = True
         ids_sorted = sorted(newly_blocked)
         ts = int(time.time())
-        compact = " ".join(
-            f"{tid}({(current_blocked_map.get(tid, {}).get('title') or '')[:40]})"
-            for tid in ids_sorted
-        )
-        line = f"KANBAN_BLOCKED_WAKE {ts} board={slug} {compact}"
+        # Tenant-scoped wake lines: one line per tenant so that per-session
+        # wake bridges can filter on `tenant=<slug>` and a tenant owned by a
+        # different foreground session does not wake this one. See
+        # wake_bridge_filter.py and state/kanban-block-watch/tenant-owners.json.
         STATE_DIR.mkdir(parents=True, exist_ok=True)
+        by_tenant = {}
+        for tid in ids_sorted:
+            ten = current_blocked_map.get(tid, {}).get("tenant") or ""
+            by_tenant.setdefault(ten, []).append(tid)
         with WAKE_LOG.open("a") as fh:
-            fh.write(line + "\n")
+            for ten in sorted(by_tenant):
+                compact = " ".join(
+                    f"{tid}({(current_blocked_map.get(tid, {}).get('title') or '')[:40]})"
+                    for tid in by_tenant[ten]
+                )
+                fh.write(
+                    f"KANBAN_BLOCKED_WAKE {ts} board={slug} tenant={ten or '-'} {compact}\n"
+                )
         alert = {
             "ts": ts,
             "board": slug,

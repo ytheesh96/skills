@@ -296,17 +296,20 @@ def save_state(state: dict) -> None:
         pass
 
 
-def append_wake(summary: str, detail: list[str]) -> None:
-    """Best-effort append of one KANBAN_BLOCKED_WAKE token line + detail.
+def append_wake(summaries, detail: list[str]) -> None:
+    """Best-effort append of KANBAN_BLOCKED_WAKE token line(s) + detail.
 
     Called only when an alert actually fires. Never raises: a failed write
     (disk full, permission) is swallowed so the watchdog still exits 0.
-    Exactly one token line is written per alert batch; detail lines are
-    indented and must not contain the token.
+    ``summaries`` is a list of per-tenant summary strings (a bare string is
+    also accepted for back-compat); each becomes one token line. Detail lines
+    are indented and must not contain the token.
     """
+    if isinstance(summaries, str):
+        summaries = [summaries]
     try:
         WAKE_DIR.mkdir(parents=True, exist_ok=True)
-        lines = [f"{WAKE_TOKEN} {summary.rstrip()}"]
+        lines = [f"{WAKE_TOKEN} {s.rstrip()}" for s in summaries]
         for d in detail:
             # Indent so it is unambiguously a detail line, not a token line.
             d = ("    " + d.strip()).rstrip()
@@ -331,11 +334,20 @@ def main() -> int:
 
     report: list[str] = []
     new_state: dict = {}
+    # id -> tenant across all scanned boards, so wake token lines can be
+    # emitted one-per-tenant and per-session wake bridges can filter on
+    # `tenant=<slug>` (see wake_bridge_filter.py / tenant-owners.json).
+    tenant_of: dict[str, str] = {}
 
     for board in boards:
         tasks = board_tasks(board)
         if not tasks:
             continue
+
+        for t in tasks:
+            tid = t.get("id")
+            if tid:
+                tenant_of[str(tid)] = str(t.get("tenant") or "")
 
         running = [t for t in tasks if str(t.get("status", "")).lower() in ACTIVE]
         blocked = [t for t in tasks if str(t.get("status", "")).lower() == "blocked"]
@@ -390,19 +402,26 @@ def main() -> int:
     if not report:
         return 0  # silent
 
-    # Wake bridge: one token line (plus indented detail) per alert batch.
-    # Build a compact summary: alerting boards, finding count, first task ids.
+    # Wake bridge: token lines (plus indented detail) per alert batch.
+    # Emit ONE token line PER TENANT so per-session wake bridges can filter
+    # on `tenant=<slug>`: a tenant owned by a different foreground session
+    # must not wake this one. See wake_bridge_filter.py / tenant-owners.json.
     boards_hit = sorted({m.group(1) for m in re.finditer(r"\*\s*([A-Za-z0-9_\-]+)\s*\*", "".join(report))})
     tids = []
     for m in re.finditer(r"\b(t_[A-Za-z0-9_]+)\b", "".join(report)):
         if m.group(1) not in tids:
             tids.append(m.group(1))
-    summary = f"{len(boards_hit)} board(s), {len(report)} finding(s)"
-    if boards_hit:
-        summary += ": " + ",".join(boards_hit)
-    if tids:
-        summary += " | ids: " + " ".join(tids[:6])
-    append_wake(summary, report)
+    by_tenant: dict[str, list[str]] = {}
+    for tid in tids:
+        by_tenant.setdefault(tenant_of.get(tid, "") or "-", []).append(tid)
+    summaries = []
+    for ten in sorted(by_tenant):
+        s = f"tenant={ten} {len(boards_hit)} board(s), {len(report)} finding(s)"
+        if boards_hit:
+            s += ": " + ",".join(boards_hit)
+        s += " | ids: " + " ".join(by_tenant[ten][:6])
+        summaries.append(s)
+    append_wake(summaries, report)
 
     stamp = datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M")
     print(f"⚠️ Kanban watchdog alert ({stamp})\n")
