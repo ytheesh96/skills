@@ -33,6 +33,11 @@ RETIRED = re.compile(
     r"delegate_task\s*\(\s*mode\s*=\s*['\"](?:loop|durable)['\"]|"
     r"\b(?:loop_graph|loop_create|loop_status|loop_block)\s*\("
 )
+# docs/cron.md is the authoritative declaration of the background recovery
+# scripts. Each entry pins a repo-relative path under scripts/recovery/.
+RECOVERY_DECL = DEFAULT_ROOT / "docs" / "cron.md"
+RECOVERY_SCRIPT_PATH = re.compile(r"`(scripts/recovery/[\w.\-]+\.py)`")
+
 REQUIRED_SEMANTICS = {
     "foreground-owned-loop-orchestration": (
         "kanban_create", "kanban_list", "kanban_show", "kanban_block",
@@ -77,6 +82,57 @@ PRIVATE_PATTERNS = (
         "free-floating provenance label",
         re.compile(r"(?i)Hermes Agent public-safe adaptation inventory"),
     ),
+)
+
+
+# ---------------------------------------------------------------------------
+# Person-specific-leak guard (check c).
+#
+# Scans every shipped skill file under skills/** for accidental leaks of the
+# maintainer's identity or private setup. The forbidden terms are centralized in
+# PERSON_LEAK_PATTERNS (case-insensitive, word-boundary where appropriate,
+# reusing the leak-rejection regex style above). An EXPLICIT safe-list
+# (LEAK_SAFELIST) excludes text that must be allowed to ship: the upstream MIT
+# attribution to Matt Pocock (required by the manifest contract) and the
+# intentional zilor-ppt validator guard strings already present in the repo. A
+# forbidden match that falls inside a safe-listed span is suppressed, so the
+# attribution / provenance text can never trip the guard.
+#
+# Coverage (the t_4942b271 spec):
+#   * maintainer real name (Vaitheesh)
+#   * maintainer home paths (/Users/yt, /home/yt)
+#   * GitHub personal-access token (ghp_)
+#   * personal handles (yt, yt_)
+#   * Obsidian personal note app
+#   * "second-brain" personal knowledge-management branding
+#   * the personal "Loop" knowledge-management cluster -- scoped to co-occurrence
+#     with Obsidian / second-brain so the legitimate public Hermes Loop
+#     orchestration features (loop-me, foreground-owned-loop-orchestration,
+#     "feedback loop", tdd "red -> green loop") are NOT flagged.
+# ---------------------------------------------------------------------------
+LEAK_SAFELIST = (
+    re.compile(r"(?i)matt\s+pocock"),
+    re.compile(r"zilor-ppt"),
+)
+
+# "Loop" is only a personal-leak signal when it appears alongside personal
+# knowledge-management branding. A file must contain both to trip the guard.
+_LOOP_RE = re.compile(r"(?i)\bloop\b")
+_LOOP_KM_SIGNAL = re.compile(r"(?i)\b(?:obsidian|second[-_ ]?brain)\b")
+
+PERSON_LEAK_PATTERNS = (
+    ("maintainer real name", re.compile(r"(?i)\bvaitheesh\b")),
+    ("maintainer home path", re.compile(r"/Users/yt")),
+    ("maintainer home path", re.compile(r"/home/yt")),
+    # GitHub personal-access token (ghp_ + >=20 chars). Required by check c:
+    # a leaked PAT must never ship.
+    ("github personal-access token", re.compile(r"\bghp_[A-Za-z0-9]{20,}\b")),
+    ("personal handle", re.compile(r"(?i)\byt_[a-z0-9]")),
+    ("personal handle", re.compile(r"(?i)(?<![a-z0-9_])yt(?![a-z0-9_])")),
+    ("obsidian personal note app", re.compile(r"(?i)\bobsidian\b")),
+    # Personal "second-brain" branding: signals a maintainer's private
+    # knowledge-management setup, not a public skill.
+    ("second-brain branding", re.compile(r"(?i)second[-_ ]?brain")),
 )
 
 
@@ -128,7 +184,7 @@ def safe_relative_path(root: Path, raw: str) -> tuple[Path | None, str | None]:
     return resolved, None
 
 
-def referenced_support_paths(text: str) -> tuple[set[str], list[str]]:
+def referenced_support_paths(text: str, label: str = "") -> tuple[set[str], list[str]]:
     """Return every package-relative support path mentioned by a skill."""
 
     refs: set[str] = set()
@@ -137,7 +193,8 @@ def referenced_support_paths(text: str) -> tuple[set[str], list[str]]:
         raw = match.group(1)
         cleaned = unquote(raw).strip().removeprefix("./").rstrip(".,;:")
         if "*" in cleaned:
-            errors.append(f"wildcard support reference is not fetchable: {raw}")
+            prefix = f"{label}: " if label else ""
+            errors.append(f"{prefix}wildcard support reference is not fetchable: {raw}")
             continue
         refs.add(cleaned)
     return refs, errors
@@ -193,33 +250,53 @@ def check_support_paths(
     root: Path,
     distribution_file: Path,
     text: str,
+    slug: str = "",
     source_file: Path | None = None,
     pure_copy: bool = False,
 ) -> tuple[list[str], set[str]]:
-    refs, errors = referenced_support_paths(text)
+    """Verify every package-relative support reference resolves to a real file.
+
+    Each declared support path (references/*.md, scripts/*, templates/*,
+    assets/*, examples/*) under the skill must exist on disk. On the first
+    missing path the error names the skill and the missing relative path so a
+    maintainer can localize the break without scanning the full message list.
+    For pure copies the mapped upstream source is also required to exist and
+    stay byte-identical (presence is not enough: the tap must ship what the
+    source shipped).
+    """
+
+    refs, errors = referenced_support_paths(text, slug)
     skill_dir = distribution_file.parent
     source_dir = source_file.parent if source_file is not None else None
     for ref in sorted(refs):
         first = ref.split("/", 1)[0]
         if first not in SUPPORT_ROOTS:
-            errors.append(f"{distribution_file}: unsupported package reference {ref}")
+            errors.append(
+                f"{slug}: unsupported package reference {ref} (in {distribution_file})"
+            )
             continue
         path, path_error = safe_relative_path(skill_dir, ref)
         if path_error:
-            errors.append(f"{distribution_file}: {path_error}")
+            errors.append(
+                f"{slug}: {path_error} (in {distribution_file})"
+            )
             continue
         if path is None or not path.is_file():
-            errors.append(f"{distribution_file}: missing support file {ref}")
+            errors.append(
+                f"{slug}: missing support file {ref} (in {distribution_file})"
+            )
             continue
         if pure_copy and source_dir is not None:
             source_path, source_error = safe_relative_path(source_dir, ref)
             if source_error or source_path is None or not source_path.is_file():
                 errors.append(
-                    f"{distribution_file}: mapped upstream support file is missing {ref}"
+                    f"{slug}: mapped upstream support file is missing {ref} "
+                    f"(in {distribution_file})"
                 )
             elif path.read_bytes() != source_path.read_bytes():
                 errors.append(
-                    f"{distribution_file}: support file drifted from mapped upstream source {ref}"
+                    f"{slug}: support file drifted from mapped upstream source {ref} "
+                    f"(in {distribution_file})"
                 )
     return errors, refs
 
@@ -282,6 +359,133 @@ def support_reference_count(root: Path) -> int:
         if path.is_file():
             total += len(referenced_support_paths(path.read_text(encoding="utf-8"))[0])
     return total
+
+
+def check_recovery_scripts_present(root: Path, errors: list[str]) -> None:
+    """Verify every recovery script declared in docs/cron.md exists.
+
+    docs/cron.md is the single source of truth for the background recovery
+    scripts. Each declared repo-relative path under scripts/recovery/ must
+    resolve to a real file in the tree, so the tap never ships a doc that
+    points at a missing script.
+    """
+    if not RECOVERY_DECL.is_file():
+        errors.append("docs/cron.md is missing (declares recovery scripts)")
+        return
+    text = RECOVERY_DECL.read_text(encoding="utf-8")
+    declared = sorted({m.group(1) for m in RECOVERY_SCRIPT_PATH.finditer(text)})
+    if not declared:
+        errors.append("docs/cron.md declares no scripts/recovery/*.py paths")
+        return
+    for relative in declared:
+        if not (root / relative).is_file():
+            errors.append(
+                f"docs/cron.md declares {relative} but it does not exist at the declared repo path"
+            )
+
+
+# Absolute .hermes home paths inside quoted literals are a portability defect:
+# the tap ships scripts that must resolve their state dir from HERMES_HOME (or
+# Path.home() / ".hermes"), never from a maintainer's absolute home path. A
+# docstring/comment describing an example path is not runtime code, so those
+# lines are stripped before the scan.
+_TRIPLE_QUOTE = re.compile(r'""".*?"""|\'\'\'.*?\'\'\'', re.DOTALL)
+_LINE_COMMENT = re.compile(r"#[^\n]*")
+# Matches either an absolute user-home .hermes path (/Users/<who>/.hermes/... or
+# /home/<who>/.hermes/...) or a home-relative tilde form (~/.hermes/...). Both
+# hard-code a maintainer's Hermes home instead of resolving from HERMES_HOME or
+# Path.home() / ".hermes", so both are portability defects for shipped scripts.
+HARDCODED_HERMES_PATH = re.compile(
+    r"""['"](?:(?:/(?:Users|home)/[^'"\s]*?\.hermes[^'"\s]*)|(?:~/\.hermes[^'"\s]*))['"]"""
+)
+
+
+def check_no_hardcoded_hermes_paths(root: Path, errors: list[str]) -> None:
+    """Flag scripts that hard-code an absolute ~/.hermes path for runtime use.
+
+    A repo-relative or HERMES_HOME-resolved path is expected instead. Docstring
+    and comment lines are stripped so prose/examples that merely mention such a
+    path do not trip the runtime-path gate.
+    """
+    scripts_dir = root / "scripts"
+    if not scripts_dir.is_dir():
+        return
+    # Test harness ships an intentional bad fixture literal to prove this very
+    # check; it is test data, not runtime code, so it must not trip the gate.
+    excluded = {scripts_dir / "test-hermes-tap-regressions.py"}
+    for path in sorted(scripts_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        if path in excluded:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="strict")
+        except (UnicodeDecodeError, OSError):
+            continue
+        code = _LINE_COMMENT.sub("", _TRIPLE_QUOTE.sub("", text))
+        for match in HARDCODED_HERMES_PATH.finditer(code):
+            literal = match.group(0)
+            rel = path.relative_to(root)
+            errors.append(
+                f"{rel}: hard-coded absolute .hermes path {literal!r}; "
+                f"resolve from HERMES_HOME or Path.home() / '.hermes' instead"
+            )
+
+
+def _in_safe_span(text: str, start: int, end: int) -> bool:
+    """True when the matched [start:end) span sits inside a safe-listed run.
+
+    Safe-listed runs are found by scanning the whole text for any LEAK_SAFELIST
+    pattern; a forbidden match overlapping one of those runs is an allowed
+    attribution/provenance string (e.g. 'Matt Pocock', 'zilor-ppt'), not a leak.
+    """
+
+    for safe in LEAK_SAFELIST:
+        for sm in safe.finditer(text):
+            if start >= sm.start() and end <= sm.end():
+                return True
+    return False
+
+
+def check_person_specific_leak(root: Path, errors: list[str]) -> None:
+    """Scan every shipped skill file under skills/** for maintainer-specific leaks.
+
+    This is check (c) of the validator contract: a public skill distribution must
+    never ship the maintainer's real name, home paths, GitHub PAT, personal
+    handles, Obsidian/second-brain personal knowledge-management branding, or the
+    personal 'Loop' KM cluster. Forbidden terms are centralized in
+    PERSON_LEAK_PATTERNS and matched case-insensitively with word boundaries where
+    appropriate. Text matching LEAK_SAFELIST (the upstream Matt Pocock MIT
+    attribution and the intentional zilor-ppt guard strings) is never flagged.
+    """
+
+    skills_dir = root / "skills"
+    if not skills_dir.is_dir():
+        return
+    for path in sorted(skills_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except (UnicodeDecodeError, OSError):
+            continue
+        # "Loop" is only a personal-leak signal inside the personal
+        # knowledge-management cluster (co-occurrence with Obsidian /
+        # second-brain). The legitimate public Hermes Loop orchestration
+        # features are not leaks, so skip the Loop gate unless the cluster
+        # signal is present.
+        loop_cluster = bool(_LOOP_RE.search(text) and _LOOP_KM_SIGNAL.search(text))
+        rel = path.relative_to(root)
+        for label, pattern in PERSON_LEAK_PATTERNS:
+            if label == "loop knowledge-management cluster" and not loop_cluster:
+                continue
+            for match in pattern.finditer(text):
+                if _in_safe_span(text, match.start(), match.end()):
+                    continue
+                errors.append(
+                    f"{rel}: person-specific-leak guard (check c) "
+                    f"({label}): {match.group(0)!r}"
+                )
 
 
 def validate(root: Path) -> list[str]:
@@ -392,7 +596,7 @@ def validate(root: Path) -> list[str]:
                 errors.append(f"{slug}: pure-copy policy requires an upstream source")
             if source_file is not None:
                 support_errors, _ = check_support_paths(
-                    root, distribution_file, text, source_file, pure_copy=True
+                    root, distribution_file, text, slug, source_file, pure_copy=True
                 )
                 errors.extend(support_errors)
                 if source_file.read_bytes() != distribution_file.read_bytes():
@@ -406,7 +610,7 @@ def validate(root: Path) -> list[str]:
                     root, overlay_raw, f"{slug}.source.overlay_path"
                 )
                 errors.extend(overlay_errors)
-            support_errors, _ = check_support_paths(root, distribution_file, text)
+            support_errors, _ = check_support_paths(root, distribution_file, text, slug)
             errors.extend(support_errors)
             digest = entry.get("distribution_sha256")
             if not isinstance(digest, str) or not HEX_SHA256.fullmatch(digest):
@@ -468,8 +672,11 @@ def validate(root: Path) -> list[str]:
     if not (root / "LICENSE").is_file():
         errors.append("upstream MIT LICENSE is missing")
 
-    return errors
 
+    check_recovery_scripts_present(root, errors)
+    check_no_hardcoded_hermes_paths(root, errors)
+
+    return errors
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
