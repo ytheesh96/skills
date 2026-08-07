@@ -82,11 +82,56 @@ PRIVATE_PATTERNS = (
         "free-floating provenance label",
         re.compile(r"(?i)Hermes Agent public-safe adaptation inventory"),
     ),
-    # GitHub personal-access token (ghp_ + >=20 chars). Required by the
-    # person-specific-leak guard (check c): a leaked PAT must never ship.
+)
+
+
+# ---------------------------------------------------------------------------
+# Person-specific-leak guard (check c).
+#
+# Scans every shipped skill file under skills/** for accidental leaks of the
+# maintainer's identity or private setup. The forbidden terms are centralized in
+# PERSON_LEAK_PATTERNS (case-insensitive, word-boundary where appropriate,
+# reusing the leak-rejection regex style above). An EXPLICIT safe-list
+# (LEAK_SAFELIST) excludes text that must be allowed to ship: the upstream MIT
+# attribution to Matt Pocock (required by the manifest contract) and the
+# intentional zilor-ppt validator guard strings already present in the repo. A
+# forbidden match that falls inside a safe-listed span is suppressed, so the
+# attribution / provenance text can never trip the guard.
+#
+# Coverage (the t_4942b271 spec):
+#   * maintainer real name (Vaitheesh)
+#   * maintainer home paths (/Users/yt, /home/yt)
+#   * GitHub personal-access token (ghp_)
+#   * personal handles (yt, yt_)
+#   * Obsidian personal note app
+#   * "second-brain" personal knowledge-management branding
+#   * the personal "Loop" knowledge-management cluster -- scoped to co-occurrence
+#     with Obsidian / second-brain so the legitimate public Hermes Loop
+#     orchestration features (loop-me, foreground-owned-loop-orchestration,
+#     "feedback loop", tdd "red -> green loop") are NOT flagged.
+# ---------------------------------------------------------------------------
+LEAK_SAFELIST = (
+    re.compile(r"(?i)matt\s+pocock"),
+    re.compile(r"zilor-ppt"),
+)
+
+# "Loop" is only a personal-leak signal when it appears alongside personal
+# knowledge-management branding. A file must contain both to trip the guard.
+_LOOP_RE = re.compile(r"(?i)\bloop\b")
+_LOOP_KM_SIGNAL = re.compile(r"(?i)\b(?:obsidian|second[-_ ]?brain)\b")
+
+PERSON_LEAK_PATTERNS = (
+    ("maintainer real name", re.compile(r"(?i)\bvaitheesh\b")),
+    ("maintainer home path", re.compile(r"/Users/yt")),
+    ("maintainer home path", re.compile(r"/home/yt")),
+    # GitHub personal-access token (ghp_ + >=20 chars). Required by check c:
+    # a leaked PAT must never ship.
     ("github personal-access token", re.compile(r"\bghp_[A-Za-z0-9]{20,}\b")),
+    ("personal handle", re.compile(r"(?i)\byt_[a-z0-9]")),
+    ("personal handle", re.compile(r"(?i)(?<![a-z0-9_])yt(?![a-z0-9_])")),
+    ("obsidian personal note app", re.compile(r"(?i)\bobsidian\b")),
     # Personal "second-brain" branding: signals a maintainer's private
-    # knowledge-management setup, not a public skill. Required by check c.
+    # knowledge-management setup, not a public skill.
     ("second-brain branding", re.compile(r"(?i)second[-_ ]?brain")),
 )
 
@@ -139,7 +184,7 @@ def safe_relative_path(root: Path, raw: str) -> tuple[Path | None, str | None]:
     return resolved, None
 
 
-def referenced_support_paths(text: str) -> tuple[set[str], list[str]]:
+def referenced_support_paths(text: str, label: str = "") -> tuple[set[str], list[str]]:
     """Return every package-relative support path mentioned by a skill."""
 
     refs: set[str] = set()
@@ -148,7 +193,8 @@ def referenced_support_paths(text: str) -> tuple[set[str], list[str]]:
         raw = match.group(1)
         cleaned = unquote(raw).strip().removeprefix("./").rstrip(".,;:")
         if "*" in cleaned:
-            errors.append(f"wildcard support reference is not fetchable: {raw}")
+            prefix = f"{label}: " if label else ""
+            errors.append(f"{prefix}wildcard support reference is not fetchable: {raw}")
             continue
         refs.add(cleaned)
     return refs, errors
@@ -204,33 +250,53 @@ def check_support_paths(
     root: Path,
     distribution_file: Path,
     text: str,
+    slug: str = "",
     source_file: Path | None = None,
     pure_copy: bool = False,
 ) -> tuple[list[str], set[str]]:
-    refs, errors = referenced_support_paths(text)
+    """Verify every package-relative support reference resolves to a real file.
+
+    Each declared support path (references/*.md, scripts/*, templates/*,
+    assets/*, examples/*) under the skill must exist on disk. On the first
+    missing path the error names the skill and the missing relative path so a
+    maintainer can localize the break without scanning the full message list.
+    For pure copies the mapped upstream source is also required to exist and
+    stay byte-identical (presence is not enough: the tap must ship what the
+    source shipped).
+    """
+
+    refs, errors = referenced_support_paths(text, slug)
     skill_dir = distribution_file.parent
     source_dir = source_file.parent if source_file is not None else None
     for ref in sorted(refs):
         first = ref.split("/", 1)[0]
         if first not in SUPPORT_ROOTS:
-            errors.append(f"{distribution_file}: unsupported package reference {ref}")
+            errors.append(
+                f"{slug}: unsupported package reference {ref} (in {distribution_file})"
+            )
             continue
         path, path_error = safe_relative_path(skill_dir, ref)
         if path_error:
-            errors.append(f"{distribution_file}: {path_error}")
+            errors.append(
+                f"{slug}: {path_error} (in {distribution_file})"
+            )
             continue
         if path is None or not path.is_file():
-            errors.append(f"{distribution_file}: missing support file {ref}")
+            errors.append(
+                f"{slug}: missing support file {ref} (in {distribution_file})"
+            )
             continue
         if pure_copy and source_dir is not None:
             source_path, source_error = safe_relative_path(source_dir, ref)
             if source_error or source_path is None or not source_path.is_file():
                 errors.append(
-                    f"{distribution_file}: mapped upstream support file is missing {ref}"
+                    f"{slug}: mapped upstream support file is missing {ref} "
+                    f"(in {distribution_file})"
                 )
             elif path.read_bytes() != source_path.read_bytes():
                 errors.append(
-                    f"{distribution_file}: support file drifted from mapped upstream source {ref}"
+                    f"{slug}: support file drifted from mapped upstream source {ref} "
+                    f"(in {distribution_file})"
                 )
     return errors, refs
 
@@ -366,6 +432,62 @@ def check_no_hardcoded_hermes_paths(root: Path, errors: list[str]) -> None:
             )
 
 
+def _in_safe_span(text: str, start: int, end: int) -> bool:
+    """True when the matched [start:end) span sits inside a safe-listed run.
+
+    Safe-listed runs are found by scanning the whole text for any LEAK_SAFELIST
+    pattern; a forbidden match overlapping one of those runs is an allowed
+    attribution/provenance string (e.g. 'Matt Pocock', 'zilor-ppt'), not a leak.
+    """
+
+    for safe in LEAK_SAFELIST:
+        for sm in safe.finditer(text):
+            if start >= sm.start() and end <= sm.end():
+                return True
+    return False
+
+
+def check_person_specific_leak(root: Path, errors: list[str]) -> None:
+    """Scan every shipped skill file under skills/** for maintainer-specific leaks.
+
+    This is check (c) of the validator contract: a public skill distribution must
+    never ship the maintainer's real name, home paths, GitHub PAT, personal
+    handles, Obsidian/second-brain personal knowledge-management branding, or the
+    personal 'Loop' KM cluster. Forbidden terms are centralized in
+    PERSON_LEAK_PATTERNS and matched case-insensitively with word boundaries where
+    appropriate. Text matching LEAK_SAFELIST (the upstream Matt Pocock MIT
+    attribution and the intentional zilor-ppt guard strings) is never flagged.
+    """
+
+    skills_dir = root / "skills"
+    if not skills_dir.is_dir():
+        return
+    for path in sorted(skills_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except (UnicodeDecodeError, OSError):
+            continue
+        # "Loop" is only a personal-leak signal inside the personal
+        # knowledge-management cluster (co-occurrence with Obsidian /
+        # second-brain). The legitimate public Hermes Loop orchestration
+        # features are not leaks, so skip the Loop gate unless the cluster
+        # signal is present.
+        loop_cluster = bool(_LOOP_RE.search(text) and _LOOP_KM_SIGNAL.search(text))
+        rel = path.relative_to(root)
+        for label, pattern in PERSON_LEAK_PATTERNS:
+            if label == "loop knowledge-management cluster" and not loop_cluster:
+                continue
+            for match in pattern.finditer(text):
+                if _in_safe_span(text, match.start(), match.end()):
+                    continue
+                errors.append(
+                    f"{rel}: person-specific-leak guard (check c) "
+                    f"({label}): {match.group(0)!r}"
+                )
+
+
 def validate(root: Path) -> list[str]:
     root = root.resolve()
     manifest, errors = load_manifest(root)
@@ -474,7 +596,7 @@ def validate(root: Path) -> list[str]:
                 errors.append(f"{slug}: pure-copy policy requires an upstream source")
             if source_file is not None:
                 support_errors, _ = check_support_paths(
-                    root, distribution_file, text, source_file, pure_copy=True
+                    root, distribution_file, text, slug, source_file, pure_copy=True
                 )
                 errors.extend(support_errors)
                 if source_file.read_bytes() != distribution_file.read_bytes():
@@ -488,7 +610,7 @@ def validate(root: Path) -> list[str]:
                     root, overlay_raw, f"{slug}.source.overlay_path"
                 )
                 errors.extend(overlay_errors)
-            support_errors, _ = check_support_paths(root, distribution_file, text)
+            support_errors, _ = check_support_paths(root, distribution_file, text, slug)
             errors.extend(support_errors)
             digest = entry.get("distribution_sha256")
             if not isinstance(digest, str) or not HEX_SHA256.fullmatch(digest):
