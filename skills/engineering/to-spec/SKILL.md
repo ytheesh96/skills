@@ -128,6 +128,10 @@ Before reporting completion:
 
 Do not publish to an issue tracker and do not create Loop tasks from this skill.
 
+### 5. Hand the SPEC to its consumer
+
+The spec is the contract for downstream task generation, not a `to-spec` deliverable. When this `to-spec` task is the sibling of a `to-tasks` card (the usual case after a map's fog clears), attach `SPEC.md` to the sibling **`to-tasks` card** so `to-tasks` can treat it as the binding contract. If the `to-tasks` card does not exist yet, attach `SPEC.md` to the parent map/decision card and record the repo path (e.g. `.hermes/specs/<slug>/SPEC.md`) in a comment on both cards so `to-tasks` can find it. The local file at `.hermes/specs/<slug>/SPEC.md` always remains the durable source of truth. Never leave the only copy of the spec stranded on the `to-spec` card — that puts the contract out of reach of the task that consumes it.
+
 ## Attribution
 
 Adapted from Matt Pocock's `to-spec` skill. Hermes replaces external issue
