@@ -692,7 +692,7 @@
         "retired-api-scan",
         "durable-kanban-semantics"
       ],
-      "distribution_sha256": "135a1ceb411e42c40fc321144f92dc266ba311fe1e99a9d85a476d1d5858e768"
+      "distribution_sha256": "477c466a43f09bfde36b3c1481cbf16ce6570dee9c9500ba3ce97cb7553473e9"
     },
     {
       "slug": "triage",
@@ -764,7 +764,7 @@
         "durable-kanban-semantics",
         "manual-model-eval"
       ],
-      "distribution_sha256": "337f41667840d5edac330c889dbc38ee67d835417efbe02228a0df73bf24b557"
+      "distribution_sha256": "fc6aaef3f36da09c23d3ceb2ae198883a6b090f9822c89fbc06b9b7921af3365"
     },
     {
       "slug": "wizard",
