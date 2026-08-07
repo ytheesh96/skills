@@ -764,7 +764,7 @@
         "durable-kanban-semantics",
         "manual-model-eval"
       ],
-      "distribution_sha256": "337f41667840d5edac330c889dbc38ee67d835417efbe02228a0df73bf24b557"
+      "distribution_sha256": "fef973c8236d0b88fd57b9450d71390002a3fa96b7c0a05c290443615b2cc683"
     },
     {
       "slug": "wizard",
