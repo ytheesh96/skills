@@ -18,6 +18,15 @@ Check with the user that these seams match their expectations.
 
 3. Write the spec using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
 
+4. **Hand the SPEC to its consumer — do NOT keep it on this card.** The spec is the
+   contract for downstream task generation, not a `to-spec` deliverable. Attach
+   `SPEC.md` to the sibling **`to-tasks` card** (the consumer), never to this
+   `to-spec` card. If the `to-tasks` card does not exist yet, attach `SPEC.md` to
+   the parent map/decision card and record the repo path (e.g.
+   `.hermes/specs/<slug>/SPEC.md`) in a comment on both cards so `to-tasks` can
+   find it. Never leave the only copy of the spec attached solely to the
+   `to-spec` card — that strands the contract away from the task that consumes it.
+
 <spec-template>
 
 ## Problem Statement
