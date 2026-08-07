@@ -260,6 +260,36 @@ def main() -> int:
     finally:
         fixture.unlink()
 
+    # The person-specific-leak guard (check c) must fail closed when a skill's
+    # distribution package contains a maintainer leak: a GitHub personal-access
+    # token (ghp_), "second-brain" personal branding, or a private home path.
+    # The fixture is dropped inside an existing skill's distribution package so
+    # it is scanned by the portability checker, then removed so the real tree
+    # still validates (RED injected, GREEN recovered).
+    leak_package = ROOT / "skills" / "kanban-worker"
+    leak_fixture = leak_package / "_regression_leak_fixture.md"
+    leak_fixture.write_text(
+        "# leak fixture\n"
+        "token ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 must never ship.\n"
+        "This is my second-brain knowledge setup.\n"
+        "Home is /Users/yt/.hermes/state/leak.json.\n",
+        encoding="utf-8",
+    )
+    try:
+        leak_errors = validator.validate(ROOT)
+        if not any("public-portability violation" in error for error in leak_errors):
+            raise AssertionError(
+                "validator did not flag a person-specific leak in a skill package:\n- "
+                + "\n- ".join(leak_errors)
+            )
+        if not any(str(leak_fixture.relative_to(ROOT)) in error for error in leak_errors):
+            raise AssertionError(
+                "leak error did not name the offending fixture:\n- "
+                + "\n- ".join(leak_errors)
+            )
+    finally:
+        leak_fixture.unlink()
+
     clean_errors = validator.validate(ROOT)
     if clean_errors:
         raise AssertionError(
@@ -275,6 +305,7 @@ def main() -> int:
     print("- adapted upstream source drift is rejected before any write")
     print("- pure-copy upstream drift is planned and applied by the real synchronizer")
     print("- synchronized candidate validates with the advanced cursor")
+    print("- person-specific-leak guard fails closed on ghp_/second-brain/private-path fixture")
     return 0
 
 
