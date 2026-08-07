@@ -82,6 +82,12 @@ PRIVATE_PATTERNS = (
         "free-floating provenance label",
         re.compile(r"(?i)Hermes Agent public-safe adaptation inventory"),
     ),
+    # GitHub personal-access token (ghp_ + >=20 chars). Required by the
+    # person-specific-leak guard (check c): a leaked PAT must never ship.
+    ("github personal-access token", re.compile(r"\bghp_[A-Za-z0-9]{20,}\b")),
+    # Personal "second-brain" branding: signals a maintainer's private
+    # knowledge-management setup, not a public skill. Required by check c.
+    ("second-brain branding", re.compile(r"(?i)second[-_ ]?brain")),
 )
 
 
@@ -319,8 +325,12 @@ def check_recovery_scripts_present(root: Path, errors: list[str]) -> None:
 # lines are stripped before the scan.
 _TRIPLE_QUOTE = re.compile(r'""".*?"""|\'\'\'.*?\'\'\'', re.DOTALL)
 _LINE_COMMENT = re.compile(r"#[^\n]*")
+# Matches either an absolute user-home .hermes path (/Users/<who>/.hermes/... or
+# /home/<who>/.hermes/...) or a home-relative tilde form (~/.hermes/...). Both
+# hard-code a maintainer's Hermes home instead of resolving from HERMES_HOME or
+# Path.home() / ".hermes", so both are portability defects for shipped scripts.
 HARDCODED_HERMES_PATH = re.compile(
-    r"""['"](/(?:Users|home)/[^'"\s]*?\.hermes[^'"\s]*)['"]"""
+    r"""['"](?:(?:/(?:Users|home)/[^'"\s]*?\.hermes[^'"\s]*)|(?:~/\.hermes[^'"\s]*))['"]"""
 )
 
 
@@ -348,7 +358,7 @@ def check_no_hardcoded_hermes_paths(root: Path, errors: list[str]) -> None:
             continue
         code = _LINE_COMMENT.sub("", _TRIPLE_QUOTE.sub("", text))
         for match in HARDCODED_HERMES_PATH.finditer(code):
-            literal = match.group(1)
+            literal = match.group(0)
             rel = path.relative_to(root)
             errors.append(
                 f"{rel}: hard-coded absolute .hermes path {literal!r}; "
