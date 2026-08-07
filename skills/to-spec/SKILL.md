@@ -1,84 +1,135 @@
 ---
 name: to-spec
-description: Turn the current conversation into a spec and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed.
-disable-model-invocation: true
+description: "Use when turning an approved discussion into a spec."
+version: 1.0.0
+author: Hermes Agent (adapted from Matt Pocock)
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [specification, requirements, testing, planning]
+    related_skills: [loop-triage, wayfinder, plan, test-driven-development]
 ---
 
-This skill takes the current conversation context and codebase understanding and produces a spec. Do NOT interview the user — just synthesize what you already know.
+# To Spec
 
-The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
+Turn the **current conversation** and verified codebase context into one
+reviewable specification. Synthesize what is already known; do not restart
+discovery as a broad interview.
+
+## Routing Boundary
+
+Use this skill when the user explicitly asks to turn an accepted discussion,
+plan, or design into a spec/PRD. Use `wayfinder` first when product or
+architecture decisions are still genuinely open.
+
+The invocation authorizes writing only the spec artifact. It does **not**
+authorize production-code edits, commits, pushes, external publication, or
+Loop/Kanban task creation. Do not create Loop work from this skill; use
+`loop-triage` only after the user approves the specification and its proposed
+breakdown.
 
 ## Process
 
-1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
+### 1. Reconstruct the accepted intent
 
-2. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better - the ideal number is one.
+Read the full current conversation and any source the user named. Separate:
 
-Check with the user that these seams match their expectations.
+- the user-visible problem and outcome,
+- accepted requirements and constraints,
+- implementation decisions already made,
+- testing expectations,
+- exclusions, and
+- unresolved decisions that still belong to the user.
 
-3. Write the spec using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
+Do not conduct a broad interview or silently invent missing product decisions.
+If an unknown does not block a coherent draft, record it under **Unresolved
+Decisions** with its decision owner. Ask one narrow question only when the user
+requested a decision-complete spec and the answer materially changes scope.
 
-4. **Hand the SPEC to its consumer — do NOT keep it on this card.** The spec is the
-   contract for downstream task generation, not a `to-spec` deliverable. Attach
-   `SPEC.md` to the sibling **`to-tasks` card** (the consumer), never to this
-   `to-spec` card. If the `to-tasks` card does not exist yet, attach `SPEC.md` to
-   the parent map/decision card and record the repo path (e.g.
-   `.hermes/specs/<slug>/SPEC.md`) in a comment on both cards so `to-tasks` can
-   find it. Never leave the only copy of the spec attached solely to the
-   `to-spec` card — that strands the contract away from the task that consumes it.
+### 2. Inspect the real codebase
 
-<spec-template>
+Inspect the real codebase when implementation or testing claims depend on it.
+Use the repository's domain glossary and respect applicable ADRs. Verify names
+and behavior in source; do not rely on stale conversation claims.
+
+Identify the **highest existing test seam** that can prove the user-visible
+behavior. Prefer existing public interfaces and prior-art tests. Do not create a
+new test seam merely to make one test convenient. If a new seam is unavoidable,
+state why the existing seam cannot observe the requirement and keep the new
+surface as high and narrow as possible.
+
+### 3. Draft `SPEC.md`
+
+Use these sections in order:
 
 ## Problem Statement
 
-The problem that the user is facing, from the user's perspective.
+Describe the problem from the user's perspective, including the observable
+failure or unmet need.
 
-## Solution
+## Solution Overview
 
-The solution to the problem, from the user's perspective.
+Describe the intended user-visible behavior and the boundaries of the solution.
 
 ## User Stories
 
-A LONG, numbered list of user stories. Each user story should be in the format of:
-
-1. As an <actor>, I want a <feature>, so that <benefit>
-
-<user-story-example>
-1. As a mobile bank customer, I want to see balance on my accounts, so that I can make better informed decisions about my spending
-</user-story-example>
-
-This list of user stories should be extremely extensive and cover all aspects of the feature.
+Use numbered stories in the form: “As a …, I want …, so that …”. Cover meaningful
+success, failure, recovery, and accessibility/operability cases without padding
+the list with duplicates.
 
 ## Implementation Decisions
 
-A list of implementation decisions that were made. This can include:
-
-- The modules that will be built/modified
-- The interfaces of those modules that will be modified
-- Technical clarifications from the developer
-- Architectural decisions
-- Schema changes
-- API contracts
-- Specific interactions
-
-Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
-
-Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it within the relevant decision and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits.
+Record accepted module/interface, data, API, state-transition, compatibility,
+and migration decisions. Avoid brittle file paths and working code snippets.
+A short prototype-derived state machine, schema, or type may be included when it
+captures an accepted decision more precisely than prose.
 
 ## Testing Decisions
 
-A list of testing decisions that were made. Include:
+Name the highest existing test seam, the externally observable behavior, the
+independent oracle, relevant prior art, and any lower-level tests needed only for
+failure localization. Tests must verify behavior rather than implementation
+details.
 
-- A description of what makes a good test (only test external behavior, not implementation details)
-- Which modules will be tested
-- Prior art for the tests (i.e. similar types of tests in the codebase)
+## Acceptance Criteria
+
+Write concrete, independently verifiable checkboxes. Include negative and
+failure-path criteria where the requirement implies them.
 
 ## Out of Scope
 
-A description of the things that are out of scope for this spec.
+State exclusions and nearby work that this spec does not authorize.
+
+## Unresolved Decisions
+
+List only material unresolved choices, their owner, and what each choice blocks.
+Write `None` when the spec is decision-complete.
 
 ## Further Notes
 
-Any further notes about the feature.
+Include provenance, compatibility caveats, rollout/rollback notes, or durable
+context that does not fit above.
 
-</spec-template>
+### 4. Store and verify the artifact
+
+For an explicit `to-spec` invocation, write the result to
+`.hermes/specs/<short-slug>/SPEC.md` in the current workspace. That request is
+write authorization for this artifact only. If workspace policy forbids a local
+write, return the complete Markdown in chat and state that no file was written.
+
+Before reporting completion:
+
+- confirm every accepted requirement appears in the spec,
+- distinguish facts from assumptions and unresolved decisions,
+- remove secrets, credentials, personal tokens, and irrelevant raw transcripts,
+- avoid issue-tracker labels or publication instructions, and
+- report the exact artifact path and whether it is ready for user approval.
+
+Do not publish to an issue tracker and do not create Loop tasks from this skill.
+
+## Attribution
+
+Adapted from Matt Pocock's `to-spec` skill. Hermes replaces external issue
+publication with a local, approval-gated specification artifact and preserves
+foreground ownership of durable work. See `references/UPSTREAM_LICENSE.md`.
