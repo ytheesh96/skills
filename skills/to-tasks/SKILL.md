@@ -14,6 +14,15 @@ Break a plan, spec, or conversation into a set of **tasks** — tracer-bullet ve
 
 Work from whatever is already in the conversation context. If the user passes a reference (a spec path, an issue number or URL) as an argument, fetch it and read its full body and comments.
 
+**Always pull the SPEC from the upstream `to-spec` handoff.** When this task is the
+`to-tasks` sibling of a `to-spec` card (the usual case after a map's fog clears),
+fetch the `SPEC.md` attached to the `to-spec` card and treat it as the **binding
+source of truth** for the ticket breakdown — do not re-derive the contract from
+scratch. If the spec is attached to the parent map/decision card instead, read it
+there. Fall back to the repo path `.hermes/specs/<slug>/SPEC.md` only if no
+attachment is found. The SPEC, not this card's body prose, defines scope and
+acceptance criteria.
+
 ### 2. Explore the codebase (optional)
 
 If you have not already explored the codebase, do so to understand the current state of the code. Task titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
