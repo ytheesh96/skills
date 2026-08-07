@@ -17,15 +17,16 @@
       "slug": "ask-matt",
       "distribution_path": "skills/ask-matt/SKILL.md",
       "source": {
-        "kind": "upstream",
-        "path": "skills/engineering/ask-matt/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills",
-        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
+        "kind": "hermes-native",
+        "path": "provenance/sources/ask-matt.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/ask-matt.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
-        "policy": "upstream-flat-copy",
-        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Re-point the router to the Hermes Kanban task model: /to-tickets rewritten to /to-tasks and tracker prose rewritten to the Kanban-only model."
       },
       "version": "1.0.0",
       "validation": [
@@ -33,7 +34,8 @@
         "tap-layout",
         "provenance-license",
         "retired-api-scan"
-      ]
+      ],
+      "distribution_sha256": "685b071bf60bb41324ecb55d30e6ce0fe1348645b724b8a77dffc9eaf197c302"
     },
     {
       "slug": "claude-handoff",
@@ -513,15 +515,16 @@
       "slug": "setup-matt-pocock-skills",
       "distribution_path": "skills/setup-matt-pocock-skills/SKILL.md",
       "source": {
-        "kind": "upstream",
-        "path": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills",
-        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
+        "kind": "hermes-native",
+        "path": "provenance/sources/setup-matt-pocock-skills.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/setup-matt-pocock-skills.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
-        "policy": "upstream-flat-copy",
-        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Adapt the setup skill to write the per-repo Hermes Kanban configuration so adapted skills resolve their board slug and tenant from the per-repo Kanban config."
       },
       "version": "1.0.0",
       "validation": [
@@ -529,7 +532,8 @@
         "tap-layout",
         "provenance-license",
         "retired-api-scan"
-      ]
+      ],
+      "distribution_sha256": "62c034bb68427251eed6275c14557af9824bdf723c7d52a9c2457bf531908753"
     },
     {
       "slug": "setup-pre-commit",
@@ -666,40 +670,44 @@
       ]
     },
     {
-      "slug": "to-tickets",
-      "distribution_path": "skills/to-tickets/SKILL.md",
+      "slug": "to-tasks",
+      "distribution_path": "skills/to-tasks/SKILL.md",
       "source": {
-        "kind": "upstream",
-        "path": "skills/engineering/to-tickets/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills",
-        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
+        "kind": "hermes-native",
+        "path": "provenance/sources/to-tasks.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/to-tasks.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
-        "policy": "upstream-flat-copy",
-        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Rename to-tickets to to-tasks and republish approved slices as Hermes Kanban cards (triage, no hard-coded assignee, parents=[blockers], board/tenant from per-repo config)."
       },
       "version": "1.0.0",
       "validation": [
         "frontmatter",
         "tap-layout",
         "provenance-license",
-        "retired-api-scan"
-      ]
+        "retired-api-scan",
+        "durable-kanban-semantics"
+      ],
+      "distribution_sha256": "135a1ceb411e42c40fc321144f92dc266ba311fe1e99a9d85a476d1d5858e768"
     },
     {
       "slug": "triage",
       "distribution_path": "skills/triage/SKILL.md",
       "source": {
-        "kind": "upstream",
-        "path": "skills/engineering/triage/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills",
-        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
+        "kind": "hermes-native",
+        "path": "provenance/sources/triage.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/triage.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
-        "policy": "upstream-flat-copy",
-        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Adapt triage to route incoming work into the Hermes Kanban triage lane so each triaged item becomes a board card with the standard handoff shape."
       },
       "version": "1.0.0",
       "validation": [
@@ -707,7 +715,8 @@
         "tap-layout",
         "provenance-license",
         "retired-api-scan"
-      ]
+      ],
+      "distribution_sha256": "129d8700166f00aa17b6ddc4cc5617a165b8bd9eb47ecd8edad6adff185acbe9"
     },
     {
       "slug": "wait-what",
@@ -871,7 +880,7 @@
         "durable-kanban-semantics",
         "manual-model-eval"
       ],
-      "distribution_sha256": "7260c156cb511935582c89d5b165b39c8a22bb636bcd2e966acb0669772fc012"
+      "distribution_sha256": "1773b553045cada78e79f3367745c9c50d5461da4f7995ca4c9de6337c5ecd41"
     },
     {
       "slug": "writing-shape",

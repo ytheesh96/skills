@@ -324,7 +324,7 @@ When executing, use the `subagent-driven-development` skill:
 
 The tracer-bullet, blocking-edge, execution-frontier, and
 expand–migrate–contract guidance is adapted from Matt Pocock's MIT-licensed
-`to-tickets` skill. See `references/UPSTREAM_LICENSE.md`.
+`to-tasks` skill. See `references/UPSTREAM_LICENSE.md`.
 
 ## Remember
 
