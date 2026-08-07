@@ -12,6 +12,8 @@ import tempfile
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -307,6 +309,55 @@ def main() -> int:
     print("- synchronized candidate validates with the advanced cursor")
     print("- person-specific-leak guard fails closed on ghp_/second-brain/private-path fixture")
     return 0
+
+
+# ---------------------------------------------------------------------------
+# Red-green pytest regression: the absolute ~/.hermes path gate.
+#
+# RED: a temporary bad fixture under scripts/ hard-codes an absolute
+#   ~/.hermes path where a repo-relative / HERMES_HOME-resolved path is
+#   expected. The validator script must EXIT NON-ZERO with that error.
+# GREEN: the real repository tree must EXIT ZERO (the gate must not
+#   false-positive on the shipped scripts).
+#
+# The defective literal is assembled by concatenation so THIS test source
+# does not itself contain a hard-coded absolute .hermes path (that would
+# trip the very gate under test); only the generated fixture does.
+# ---------------------------------------------------------------------------
+
+VALIDATOR = ROOT / "scripts" / "validate-hermes-tap.py"
+_BAD_PATH = "/Users/yt/.her" + "mes/config"
+
+
+def test_absolute_path_check_red_bad_fixture_fails() -> None:
+    fixture = ROOT / "scripts" / "_regression_bad_fixture.py"
+    fixture.write_text(f"HERMES_HOME = {_BAD_PATH!r}\n", encoding="utf-8")
+    try:
+        result = subprocess.run(
+            [sys.executable, str(VALIDATOR), "--root", str(ROOT)],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+    finally:
+        fixture.unlink()
+    assert result.returncode != 0, (
+        "validator must exit non-zero on a hard-coded absolute .hermes path:\\n"
+        + result.stdout
+    )
+    assert "hard-coded absolute .hermes path" in result.stdout
+
+
+def test_absolute_path_check_green_real_tree_passes() -> None:
+    result = subprocess.run(
+        [sys.executable, str(VALIDATOR), "--root", str(ROOT)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    assert result.returncode == 0, (
+        "validator must exit zero on the real repository tree:\\n" + result.stdout
+    )
 
 
 if __name__ == "__main__":
