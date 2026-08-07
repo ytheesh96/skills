@@ -1,0 +1,39 @@
+name: Validate Hermes skill tap
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate flat tap, manifest, provenance, and durable semantics
+        run: python3 scripts/validate-hermes-tap.py
+      - name: Compile validation and regression scripts
+        run: python3 -m compileall -q scripts
+      - name: Run deterministic upstream-advance and drift regressions
+        run: python3 scripts/test-hermes-tap-regressions.py
+      - name: Parse and exercise workflow safety invariants
+        run: python3 scripts/test-hermes-tap-workflows.py
+      - name: Check repository files for secrets and private paths
+        run: |
+          ! git grep -nE '/Users/|/home/[^/]+/|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|gh[pousr]_[A-Za-z0-9_]{20,}' -- ':!package-lock.json' ':!scripts/validate-hermes-tap.py' ':!.github/workflows/validate-hermes-tap.yml'
+      - name: Check whitespace
+        run: git diff --check
+      - name: Validate JSON documents
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in [Path('hermes-skill-manifest.json'), *Path('evals/fixtures').glob('*.json')]:
+              json.loads(path.read_text())
+              print(f'valid JSON: {path}')
+          PY
+      - name: Document model-eval boundary
+        run: test -n "$(grep -F 'manual-model-eval' hermes-skill-manifest.json)"

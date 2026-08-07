@@ -1,0 +1,22 @@
+{
+  "name": "durable-kanban-enabled",
+  "mode": "skill-enabled",
+  "prompt": "Plan a two-step durable task with a human decision between steps.",
+  "required_behaviors": [
+    "use one explicit board and stable tenant for every operation",
+    "call kanban_create once per task",
+    "set parents at creation or use kanban_link afterward",
+    "use kanban_list and kanban_show for state",
+    "use kanban_block and kanban_unblock for human decisions",
+    "keep planning, graph mutation, follow-ups, acceptance, and closure in foreground"
+  ],
+  "forbidden_behaviors": [
+    "delegate_task(mode=loop)",
+    "delegate_task(mode=durable)",
+    "loop_graph",
+    "loop_create",
+    "loop_status",
+    "loop_block"
+  ],
+  "expected": "A bounded worker may gather evidence, but the foreground owns decisions and graph lifecycle."
+}
