@@ -12,6 +12,8 @@ import tempfile
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -234,6 +236,69 @@ def main() -> int:
         if (sync_checkout / "skills/wayfinder/SKILL.md").read_bytes() != before_distribution:
             raise AssertionError("synchronizer overwrote an adapted distribution before review")
 
+    # The validator must fail closed when a committed script hard-codes an
+    # absolute ~/.hermes path instead of resolving it from HERMES_HOME or
+    # Path.home(). A temporary fixture under scripts/ exercises the gate; the
+    # real tree then validates again once the fixture is removed, proving the
+    # check is precise and does not false-positive on the shipped scripts.
+    # The defective literal is assembled by concatenation so THIS test source
+    # does not itself contain a hard-coded absolute .hermes path (that would
+    # trip the very gate under test); only the generated fixture does.
+    bad_path = "/Users/yt/.her" + "mes/state/foreground-notify-target.json"
+    fixture = ROOT / "scripts" / "_regression_bad_fixture.py"
+    fixture.write_text(f"HERMES_HOME = {bad_path!r}\n", encoding="utf-8")
+    try:
+        injected_errors = validator.validate(ROOT)
+        if not any("hard-coded absolute .hermes path" in error for error in injected_errors):
+            raise AssertionError(
+                "validator did not flag a hard-coded absolute .hermes path:\\n- "
+                + "\n- ".join(injected_errors)
+            )
+        if not any(str(fixture.relative_to(ROOT)) in error for error in injected_errors):
+            raise AssertionError(
+                "hard-coded-path error did not name the offending fixture:\\n- "
+                + "\n- ".join(injected_errors)
+            )
+    finally:
+        fixture.unlink()
+
+    # The person-specific-leak guard (check c) must fail closed when a skill's
+    # distribution package contains a maintainer leak: a GitHub personal-access
+    # token (ghp_), "second-brain" personal branding, or a private home path.
+    # The fixture is dropped inside an existing skill's distribution package so
+    # it is scanned by the portability checker, then removed so the real tree
+    # still validates (RED injected, GREEN recovered).
+    leak_package = ROOT / "skills" / "kanban-worker"
+    leak_fixture = leak_package / "_regression_leak_fixture.md"
+    leak_fixture.write_text(
+        "# leak fixture\n"
+        "token ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 must never ship.\n"
+        "This is my second-brain knowledge setup.\n"
+        "Home is /Users/yt/.hermes/state/leak.json.\n",
+        encoding="utf-8",
+    )
+    try:
+        leak_errors = validator.validate(ROOT)
+        if not any("public-portability violation" in error for error in leak_errors):
+            raise AssertionError(
+                "validator did not flag a person-specific leak in a skill package:\n- "
+                + "\n- ".join(leak_errors)
+            )
+        if not any(str(leak_fixture.relative_to(ROOT)) in error for error in leak_errors):
+            raise AssertionError(
+                "leak error did not name the offending fixture:\n- "
+                + "\n- ".join(leak_errors)
+            )
+    finally:
+        leak_fixture.unlink()
+
+    clean_errors = validator.validate(ROOT)
+    if clean_errors:
+        raise AssertionError(
+            "tree must validate again after the bad fixture is removed:\\n- "
+            + "\n- ".join(clean_errors)
+        )
+
     print("PASS: Hermes tap regression oracle")
     print("- current manifest/provenance validates with 0 missing support paths")
     print("- advanced upstream cursor validates without a historical SHA allowlist")
@@ -242,7 +307,57 @@ def main() -> int:
     print("- adapted upstream source drift is rejected before any write")
     print("- pure-copy upstream drift is planned and applied by the real synchronizer")
     print("- synchronized candidate validates with the advanced cursor")
+    print("- person-specific-leak guard fails closed on ghp_/second-brain/private-path fixture")
     return 0
+
+
+# ---------------------------------------------------------------------------
+# Red-green pytest regression: the absolute ~/.hermes path gate.
+#
+# RED: a temporary bad fixture under scripts/ hard-codes an absolute
+#   ~/.hermes path where a repo-relative / HERMES_HOME-resolved path is
+#   expected. The validator script must EXIT NON-ZERO with that error.
+# GREEN: the real repository tree must EXIT ZERO (the gate must not
+#   false-positive on the shipped scripts).
+#
+# The defective literal is assembled by concatenation so THIS test source
+# does not itself contain a hard-coded absolute .hermes path (that would
+# trip the very gate under test); only the generated fixture does.
+# ---------------------------------------------------------------------------
+
+VALIDATOR = ROOT / "scripts" / "validate-hermes-tap.py"
+_BAD_PATH = "/Users/yt/.her" + "mes/config"
+
+
+def test_absolute_path_check_red_bad_fixture_fails() -> None:
+    fixture = ROOT / "scripts" / "_regression_bad_fixture.py"
+    fixture.write_text(f"HERMES_HOME = {_BAD_PATH!r}\n", encoding="utf-8")
+    try:
+        result = subprocess.run(
+            [sys.executable, str(VALIDATOR), "--root", str(ROOT)],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+    finally:
+        fixture.unlink()
+    assert result.returncode != 0, (
+        "validator must exit non-zero on a hard-coded absolute .hermes path:\\n"
+        + result.stdout
+    )
+    assert "hard-coded absolute .hermes path" in result.stdout
+
+
+def test_absolute_path_check_green_real_tree_passes() -> None:
+    result = subprocess.run(
+        [sys.executable, str(VALIDATOR), "--root", str(ROOT)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    assert result.returncode == 0, (
+        "validator must exit zero on the real repository tree:\\n" + result.stdout
+    )
 
 
 if __name__ == "__main__":
