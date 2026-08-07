@@ -312,6 +312,50 @@ def check_recovery_scripts_present(root: Path, errors: list[str]) -> None:
             )
 
 
+# Absolute .hermes home paths inside quoted literals are a portability defect:
+# the tap ships scripts that must resolve their state dir from HERMES_HOME (or
+# Path.home() / ".hermes"), never from a maintainer's absolute home path. A
+# docstring/comment describing an example path is not runtime code, so those
+# lines are stripped before the scan.
+_TRIPLE_QUOTE = re.compile(r'""".*?"""|\'\'\'.*?\'\'\'', re.DOTALL)
+_LINE_COMMENT = re.compile(r"#[^\n]*")
+HARDCODED_HERMES_PATH = re.compile(
+    r"""['"](/(?:Users|home)/[^'"\s]*?\.hermes[^'"\s]*)['"]"""
+)
+
+
+def check_no_hardcoded_hermes_paths(root: Path, errors: list[str]) -> None:
+    """Flag scripts that hard-code an absolute ~/.hermes path for runtime use.
+
+    A repo-relative or HERMES_HOME-resolved path is expected instead. Docstring
+    and comment lines are stripped so prose/examples that merely mention such a
+    path do not trip the runtime-path gate.
+    """
+    scripts_dir = root / "scripts"
+    if not scripts_dir.is_dir():
+        return
+    # Test harness ships an intentional bad fixture literal to prove this very
+    # check; it is test data, not runtime code, so it must not trip the gate.
+    excluded = {scripts_dir / "test-hermes-tap-regressions.py"}
+    for path in sorted(scripts_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        if path in excluded:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="strict")
+        except (UnicodeDecodeError, OSError):
+            continue
+        code = _LINE_COMMENT.sub("", _TRIPLE_QUOTE.sub("", text))
+        for match in HARDCODED_HERMES_PATH.finditer(code):
+            literal = match.group(1)
+            rel = path.relative_to(root)
+            errors.append(
+                f"{rel}: hard-coded absolute .hermes path {literal!r}; "
+                f"resolve from HERMES_HOME or Path.home() / '.hermes' instead"
+            )
+
+
 def validate(root: Path) -> list[str]:
     root = root.resolve()
     manifest, errors = load_manifest(root)
@@ -498,6 +542,7 @@ def validate(root: Path) -> list[str]:
 
 
     check_recovery_scripts_present(root, errors)
+    check_no_hardcoded_hermes_paths(root, errors)
 
     return errors
 
