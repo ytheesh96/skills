@@ -33,6 +33,11 @@ RETIRED = re.compile(
     r"delegate_task\s*\(\s*mode\s*=\s*['\"](?:loop|durable)['\"]|"
     r"\b(?:loop_graph|loop_create|loop_status|loop_block)\s*\("
 )
+# docs/cron.md is the authoritative declaration of the background recovery
+# scripts. Each entry pins a repo-relative path under scripts/recovery/.
+RECOVERY_DECL = DEFAULT_ROOT / "docs" / "cron.md"
+RECOVERY_SCRIPT_PATH = re.compile(r"`(scripts/recovery/[\w.\-]+\.py)`")
+
 REQUIRED_SEMANTICS = {
     "foreground-owned-loop-orchestration": (
         "kanban_create", "kanban_list", "kanban_show", "kanban_block",
@@ -284,6 +289,29 @@ def support_reference_count(root: Path) -> int:
     return total
 
 
+def check_recovery_scripts_present(root: Path, errors: list[str]) -> None:
+    """Verify every recovery script declared in docs/cron.md exists.
+
+    docs/cron.md is the single source of truth for the background recovery
+    scripts. Each declared repo-relative path under scripts/recovery/ must
+    resolve to a real file in the tree, so the tap never ships a doc that
+    points at a missing script.
+    """
+    if not RECOVERY_DECL.is_file():
+        errors.append("docs/cron.md is missing (declares recovery scripts)")
+        return
+    text = RECOVERY_DECL.read_text(encoding="utf-8")
+    declared = sorted({m.group(1) for m in RECOVERY_SCRIPT_PATH.finditer(text)})
+    if not declared:
+        errors.append("docs/cron.md declares no scripts/recovery/*.py paths")
+        return
+    for relative in declared:
+        if not (root / relative).is_file():
+            errors.append(
+                f"docs/cron.md declares {relative} but it does not exist at the declared repo path"
+            )
+
+
 def validate(root: Path) -> list[str]:
     root = root.resolve()
     manifest, errors = load_manifest(root)
@@ -468,8 +496,10 @@ def validate(root: Path) -> list[str]:
     if not (root / "LICENSE").is_file():
         errors.append("upstream MIT LICENSE is missing")
 
-    return errors
 
+    check_recovery_scripts_present(root, errors)
+
+    return errors
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
