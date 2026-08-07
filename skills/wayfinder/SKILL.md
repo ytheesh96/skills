@@ -274,6 +274,14 @@ exit 0) gates the implementation/operation children's acceptance, not the map.
 every call (env via the task/board variables, or an explicit `board=` argument)
 so a spawned charting run never writes to the wrong board.
 
+**#7 — Finalization must not commit stray scratch artifacts.** A finalizing run
+(commit, fan-out, or `kanban_complete`) can sweep scratch files, logs, or temp
+artifacts left in the workspace into the tap, breaking the
+`distribution_sha256`. Before finalizing, sweep the workspace for stray artifacts
+and exclude them; only the authored skill bytes should land in the tap. Verify
+the final `distribution_sha256` still matches the recomputed hash of the intended
+file set.
+
 ---
 
 Adapted from [Matt Pocock's Wayfinder skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md), © 2026 Matt Pocock, under the MIT License. See `references/UPSTREAM_LICENSE.md`.
