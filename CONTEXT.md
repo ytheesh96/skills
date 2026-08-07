@@ -5,18 +5,18 @@ A collection of agent skills (slash commands and behaviors) loaded by Claude Cod
 ## Language
 
 **Issue tracker**:
-The tool that hosts a repo's issues — GitHub Issues, Linear, a local `.scratch/` markdown convention, or similar. Skills like `to-tickets`, `to-spec`, and `triage` read from and write to it.
-_Avoid_: backlog manager, backlog backend, issue host
+Hermes Kanban — one board per repo. The tool that hosts a repo's issues; skills like `to-tasks`, `to-spec`, and `triage` read from and write to it.
+_Avoid_: listing Jira, Asana, Trello, or GitHub Projects as live options; backlog manager, backlog backend, issue host
 
 **Issue**:
-A single tracked unit of work inside an **Issue tracker** — a bug, task, spec, or slice produced by `to-tickets`.
+A single tracked unit of work inside an **Issue tracker** — a Hermes Kanban card/task (a bug, feature, spec, or slice produced by `to-tasks`).
 _Avoid_: ticket (use only when quoting external systems that call them tickets, or for a **Decision ticket** — see below)
 
 **Decision ticket**:
-A `wayfinder` unit — a child **Issue** of a `wayfinder:map` holding a *question* whose resolution is a decision, not a slice of a build to execute. The **decision** qualifier is what keeps it distinct from an implementation ticket; `wayfinder` introduces the term, then uses "ticket".
+A `wayfinder` planning term — a unit holding a *question* whose resolution is a decision, not a slice of a build to execute. It resolves questions and is distinct from a **task**; `wayfinder` introduces the term, then uses "ticket".
 
 **Triage role**:
-A canonical state-machine label applied to an **Issue** during triage (e.g. `needs-triage`, `ready-for-afk`). Each role maps to a real label string in the **Issue tracker** via `docs/agents/triage-labels.md`.
+A triage-phase state of an **Issue**, mapped to a native Hermes Kanban status: `needs-triage` → `triage`; `needs-info` → `blocked` (`needs_input`); `ready-for-agent` → `ready`; `ready-for-human` → `blocked` (`capability`); `wontfix` → `archived`.
 
 ## Relationships
 

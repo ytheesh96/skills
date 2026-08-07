@@ -2,6 +2,8 @@
 
 This fork is a public Hermes Agent skill tap built from [Matt Pocock's `skills`](https://github.com/mattpocock/skills). It keeps the upstream tree reviewable while adding a direct-child distribution layout that Hermes can discover.
 
+**Rename note:** the upstream `to-tickets` skill is renamed to `to-tasks` in this tap, and its issue tracker is fixed to **Hermes Kanban** (one board per repo) rather than GitHub or local markdown. See `CONTEXT.md` for the term glossary.
+
 ## What is upstream and what is Hermes-adapted?
 
 - The original nested `skills/engineering`, `skills/productivity`, `skills/in-progress`, and `skills/misc` tree is preserved in place, with Matt Pocock's attribution and MIT license retained.

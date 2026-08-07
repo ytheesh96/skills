@@ -58,6 +58,10 @@ REQUIRED_SEMANTICS = {
         "kanban_create", "kanban_list", "kanban_show", "kanban_block",
         "kanban_unblock", "kanban_link", "board", "tenant",
     ),
+    "to-tasks": (
+        "kanban_create", "kanban_show", "kanban_block",
+        "kanban_link", "board", "tenant",
+    ),
 }
 
 # These are portability boundaries, not a ban on generic words such as
