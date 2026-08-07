@@ -17,7 +17,9 @@ The current Hermes installer accepts a full GitHub identifier in the form
 `owner/repo/path/to/skill-directory` or a direct `SKILL.md` URL; `<skill-slug>`
 by itself is a search term, not an installer identifier. GitHub identifiers
 resolve the repository's default branch, so they cannot install an unmerged
-pull-request revision.
+pull-request revision. A direct `SKILL.md` raw URL pinned to a commit does NOT
+have that limit: a pull request head commit is reachable at raw.githubusercontent.com
+(published under `refs/pull/<n>/head`) and installs before the PR is merged.
 
 ```bash
 tmp_home="$(mktemp -d "${TMPDIR:-/tmp}/hermes-skill-tap.XXXXXX")"
@@ -28,11 +30,13 @@ export HERMES_TAP_REPOSITORY=ytheesh96/skills
 hermes skills tap add "$HERMES_TAP_REPOSITORY"
 hermes skills search writing-shape --source github --json
 
-# Tested fallback for a published immutable commit. Set TAP_COMMIT to a
-# published commit that contains this flat layout; an unmerged pull-request
-# commit is not visible through a tap's default-branch index and cannot be
-# fetched from raw.githubusercontent.com until it is published.
-: "${TAP_COMMIT:?Set TAP_COMMIT to a published commit containing this tap layout}"
+# Tested fallback for the EXACT candidate commit. Set TAP_COMMIT to the pull
+# request's head commit: a PR head is reachable at raw.githubusercontent.com
+# (published as refs/pull/<n>/head) even before it is merged to the default
+# branch, so the raw-URL fallback installs the candidate revision below. The
+# tap index and the repository-identifier resolver, by contrast, read the
+# repository's DEFAULT branch only and cannot reach the candidate until merged.
+: "${TAP_COMMIT:?Set TAP_COMMIT to the PR head commit containing this tap layout}"
 hermes skills install \
   "https://raw.githubusercontent.com/ytheesh96/skills/${TAP_COMMIT}/skills/writing-shape/SKILL.md" \
   --yes
@@ -42,17 +46,21 @@ hermes skills update
 
 The first command registers this fork as a tap. The exact search query uses the
 GitHub tap source; while this candidate is only a pull request it returns `[]`
-because the tap reads the default branch. The raw URL fallback is tested only
-for a published immutable revision; the smoke installed `writing-shape`,
-`check` reported it up-to-date, and `update` reported no updates. It does not
-prove installation of this unmerged local candidate. Until this candidate is
-published, no supported installer source can fetch its exact commit. After the
-flat layout is on the default branch, use the repository identifier for the
-published path (for example `ytheesh96/skills/skills/writing-shape`); before
-then, the resolver may return the old default-branch indexed skill instead of
-the candidate. The smoke canonicalizes the disposable `HERMES_HOME` path
-because the current CLI compares canonical install roots; without that step,
-macOS symlinked temporary directories can be rejected during installation.
+because the tap reads the default branch. The raw-URL fallback is tested against
+the pull request's head commit: a PR head is reachable at
+raw.githubusercontent.com (published as `refs/pull/<n>/head`) before merge, so the
+smoke demonstrated the candidate installs end-to-end — `writing-shape` and
+`writing-plans` (which carries `references/*.md` support files) installed, `check`
+reported them up-to-date, and `update` reported no updates. The smoke was
+re-run with the repository identifier `ytheesh96/skills/skills/writing-shape`:
+that path resolves the **default branch only** (`main` at the time of writing)
+and installs the nested `skills/in-progress/writing-shape` mirror, NOT the flat
+candidate — so the repository-identifier installer is a capability blocker for
+this unmerged candidate. After the flat layout lands on the default branch, the
+repository identifier resolves the published flat path instead. The smoke
+canonicalizes the disposable `HERMES_HOME` path because the current CLI compares
+canonical install roots; without that step, macOS symlinked temporary directories
+can be rejected during installation.
 
 ## Upstream synchronization
 
