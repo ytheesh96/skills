@@ -666,26 +666,29 @@
       ]
     },
     {
-      "slug": "to-tickets",
-      "distribution_path": "skills/to-tickets/SKILL.md",
+      "slug": "to-tasks",
+      "distribution_path": "skills/to-tasks/SKILL.md",
       "source": {
-        "kind": "upstream",
-        "path": "skills/engineering/to-tickets/SKILL.md",
-        "repository": "https://github.com/mattpocock/skills",
-        "base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302"
+        "kind": "hermes-native",
+        "path": "provenance/sources/to-tasks.md",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "base_sha": "8f2712725af78c98c9ef7cdd447d14cb9348428d",
+        "overlay_path": "provenance/overlays/to-tasks.md"
       },
       "upstream_base_sha": "8b36d4fb2635b3c21998dcd8144439c9e5ba7302",
       "adaptation": {
-        "policy": "upstream-flat-copy",
-        "rationale": "Keep the upstream skill byte-for-byte available at a direct tap path; nested source remains authoritative for sync review."
+        "policy": "hermes-kanban-adaptation",
+        "rationale": "Rename to-tickets to to-tasks and republish approved slices as Hermes Kanban cards (triage, no hard-coded assignee, parents=[blockers], board/tenant from per-repo config)."
       },
       "version": "1.0.0",
       "validation": [
         "frontmatter",
         "tap-layout",
         "provenance-license",
-        "retired-api-scan"
-      ]
+        "retired-api-scan",
+        "durable-kanban-semantics"
+      ],
+      "distribution_sha256": "135a1ceb411e42c40fc321144f92dc266ba311fe1e99a9d85a476d1d5858e768"
     },
     {
       "slug": "triage",
